@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin Animals</title>
-<link rel="manifest" href="./manifest.json?v=2.2.0">
+<link rel="manifest" href="./manifest.json?v=2.3.0">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --panel:#ffffffcc; --text:#10121a; }
@@ -325,21 +325,18 @@
 
   function startPreset(kind){ 
     ensureAudio(); stopPreset();
-    // 1. MP3があれば再生
     var srcMap = { 'dog':'./dog.mp3', 'bear':'./bear.mp3', 'elephant':'./elephant.mp3' };
     var mp3Src = srcMap[kind];
     
-    // MP3が存在するかチェックはできないため、とりあえず再生を試みる
-    // エラー(ファイルなし)なら電子音シーケンスを開始する、というロジック
+    // まずMP3再生を試み、失敗（ファイルなし）なら電子音へ
     audio.src = mp3Src;
     audio.loop = true;
     var playPromise = audio.play();
     
     if(playPromise !== undefined){
       playPromise.then(_ => {
-        // MP3再生成功！何もしない
+        // MP3再生成功！
       }).catch(error => {
-        // MP3がないので、電子音でメロディを奏でる
         console.log("MP3 not found, playing synth.");
         startSynthSeq(kind);
       });
@@ -347,7 +344,7 @@
   }
 
   function startSynthSeq(kind){
-    // 電子音メロディ (YouTubeの曲に合わせて調整)
+    // 電子音メロディ (YouTubeの曲に合わせて調整 v2.3)
     if(kind==='dog'){ 
       // いぬのおまわりさん (C Major)
       seqTempo=120;
@@ -368,19 +365,19 @@
       ]; 
     }
     else if(kind==='elephant'){ 
-      // ぞうさん (C Major)
+      // ぞうさん (C Major) - 修正済み
       seqTempo=90; 
-      // ぞうさん(67,64,67,64,67) おはなが(67,67,64,64,67) ながいのね(67,67,67)
-      // そうよ(60,62,64,65) かあさんも(67,67,67) ながいのよ(65,64,62,60)
+      // ぞうさん(67,64, 67,64) おはなが(67,69,67,64) ながいのね(67,69,67,64,62)
+      // そうよ(60,62,64,65) かあさんも(67,67,67) ながいのよ(67,65,64,62,60)
       seqData=[
-        67,64,67,64, 67,null,null, 67,67,64,64, 67,null,null, 
-        60,62,64,65, 67,67,67,null, 65,64,62,60, null,null,null
+        67,64,67,64, null,null, 67,69,67,64, null,null, 67,69,67,64, 62,null,null,
+        60,62,64,65, null,null, 67,67,67,null, null,null, 67,65,64,62, 60,null,null,null
       ]; 
     }
     
     if(seqData){
         (function tick(){
-          if(presetSel.value !== kind) return; // 別の曲に変えたら停止
+          if(presetSel.value !== kind) return;
           var stepDur = 60/seqTempo;
           var n = seqData[seqPos % seqData.length];
           if(n!=null){ playNote(n, stepDur); }
@@ -422,7 +419,7 @@
 
 })();</script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=2.2.0"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=2.3.0"); }
 </script>
 </body>
 </html>
