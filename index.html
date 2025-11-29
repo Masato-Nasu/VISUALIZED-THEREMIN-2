@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin Animals</title>
-<link rel="manifest" href="./manifest.json?v=2.3.0">
+<link rel="manifest" href="./manifest.json?v=3.1.0">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --panel:#ffffffcc; --text:#10121a; }
@@ -35,7 +35,7 @@
       <div style="margin-top:12px;">
         <button id="startbtn" class="startbtn">はじめる ▶</button>
       </div>
-      <div class="small">短タップ：はじける ／ 長押し：テルミン<br>（2本指長押しで設定パネル）</div>
+      <div class="small">短タップ：はじける ／ 長押し：テルミン<br>（2本指長押しで設定パネル）v3.1</div>
     </div>
   </div>
 </div>
@@ -313,12 +313,13 @@
   var seqTimer=null, seqPos=0, seqData=null, seqTempo=100;
   function stopPreset(){ if(seqTimer){ clearTimeout(seqTimer); seqTimer=null; } seqPos=0; }
   
+  // v3.1: Play Note with Duration
   function playNote(n, dur){
       var t=actx.currentTime; var o=actx.createOscillator(); o.type='triangle'; 
       var g=actx.createGain(); g.gain.value=0.0; var f=440*Math.pow(2,(n-69)/12); 
       var lpf=actx.createBiquadFilter(); lpf.type='lowpass'; lpf.frequency.value=2200; 
       o.frequency.value=f; o.connect(lpf).connect(g).connect(bgmBus); 
-      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.8,t+0.01); 
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.8,t+0.02); 
       g.gain.exponentialRampToValueAtTime(0.001, t+dur*0.9); 
       o.start(t); o.stop(t+dur);
   }
@@ -328,15 +329,13 @@
     var srcMap = { 'dog':'./dog.mp3', 'bear':'./bear.mp3', 'elephant':'./elephant.mp3' };
     var mp3Src = srcMap[kind];
     
-    // まずMP3再生を試み、失敗（ファイルなし）なら電子音へ
+    // MP3優先再生
     audio.src = mp3Src;
     audio.loop = true;
     var playPromise = audio.play();
     
     if(playPromise !== undefined){
-      playPromise.then(_ => {
-        // MP3再生成功！
-      }).catch(error => {
+      playPromise.then(_ => { /*OK*/ }).catch(error => {
         console.log("MP3 not found, playing synth.");
         startSynthSeq(kind);
       });
@@ -344,45 +343,56 @@
   }
 
   function startSynthSeq(kind){
-    // 電子音メロディ (YouTubeの曲に合わせて調整 v2.3)
+    // リズム対応メロディ (n:NoteNumber, d:Beats)
     if(kind==='dog'){ 
-      // いぬのおまわりさん (C Major)
       seqTempo=120;
-      // まいごの(60,62,64,65) まいごの(67,67,67) こねこちゃん(69,69,69,67)
-      // あなたの(65,65,65,64) おうちは(64,64,62) どこですか(62,62,64,62,60)
+      // まいごの(1) まいごの(1) こねこちゃん(1)
       seqData=[
-        60,62,64,65, 67,67,67,null, 69,69,69,67, null,null,
-        65,65,65,64, 64,64,62,null, 62,62,64,62, 60,null,null,null
+        {n:60,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5}, {n:67,d:0.5},{n:67,d:0.5},{n:67,d:1.0}, // Mai-go-no Mai-go-no
+        {n:null,d:0.5},
+        {n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:72,d:0.5}, {n:71,d:0.5},{n:69,d:0.5},{n:67,d:1.0}, // Ko-ne-ko-chan
+        {n:null,d:0.5},
+        {n:65,d:0.5},{n:65,d:0.5},{n:65,d:0.5},{n:64,d:0.5}, {n:64,d:0.5},{n:64,d:0.5},{n:62,d:1.0}, // A-na-ta-no O-u-chi-wa
+        {n:null,d:0.5},
+        {n:62,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:62,d:0.5}, {n:60,d:2.0}, // Do-ko-de-su-ka
+        {n:null,d:1.0}
       ];
     }
     else if(kind==='bear'){ 
-      // 森のくまさん (C Major)
       seqTempo=110; 
-      // あるひ(67,67) もりのなか(64,65,67,64,60) くまさんに(67,67,64,65) であった(67,64,60)
       seqData=[
-        67,67,64,65, 67,64,60,null, 67,67,64,65, 67,64,60,null,
-        60,62,64,65, 67,67,69,67, 65,65,64,62, 60,null,null,null
+        {n:67,d:1.0},{n:67,d:1.0},{n:64,d:1.0},{n:65,d:1.0}, {n:67,d:1.0},{n:64,d:1.0},{n:60,d:2.0}, // Aruhi morino
+        {n:null,d:0.5},
+        {n:67,d:1.0},{n:67,d:1.0},{n:64,d:1.0},{n:65,d:1.0}, {n:67,d:1.0},{n:64,d:1.0},{n:60,d:2.0}, // Naka kuma
+        {n:null,d:0.5},
+        {n:60,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5}, {n:67,d:1.0},{n:67,d:1.0},{n:69,d:1.0},{n:67,d:1.0}, // Hanasaku mori
+        {n:65,d:1.0},{n:65,d:1.0},{n:64,d:1.0},{n:62,d:1.0}, {n:60,d:2.0}, {n:null,d:1.0}
       ]; 
     }
     else if(kind==='elephant'){ 
-      // ぞうさん (C Major) - 修正済み
-      seqTempo=90; 
-      // ぞうさん(67,64, 67,64) おはなが(67,69,67,64) ながいのね(67,69,67,64,62)
-      // そうよ(60,62,64,65) かあさんも(67,67,67) ながいのよ(67,65,64,62,60)
+      seqTempo=100; // 3/4 time feel? 
+      // Zou(2) San(1) Zou(2) San(1)
       seqData=[
-        67,64,67,64, null,null, 67,69,67,64, null,null, 67,69,67,64, 62,null,null,
-        60,62,64,65, null,null, 67,67,67,null, null,null, 67,65,64,62, 60,null,null,null
+        {n:67,d:2.0},{n:64,d:1.0}, {n:67,d:2.0},{n:64,d:1.0}, // Zou-san Zou-san
+        {n:67,d:1.0},{n:69,d:1.0},{n:67,d:1.0}, {n:64,d:2.0},{n:62,d:1.0}, // O-ha-na-ga Naga-i-no-ne
+        {n:null,d:1.0},
+        {n:60,d:1.0},{n:62,d:1.0},{n:64,d:1.0}, {n:65,d:3.0}, // So-u-yo
+        {n:67,d:1.0},{n:67,d:1.0},{n:67,d:1.0}, // Ka-a-san-mo
+        {n:67,d:1.0},{n:65,d:1.0},{n:64,d:1.0}, {n:62,d:2.0},{n:60,d:1.0}, // Na-ga-i-no-yo
+        {n:null,d:2.0}
       ]; 
     }
     
     if(seqData){
         (function tick(){
           if(presetSel.value !== kind) return;
-          var stepDur = 60/seqTempo;
-          var n = seqData[seqPos % seqData.length];
-          if(n!=null){ playNote(n, stepDur); }
+          var item = seqData[seqPos % seqData.length];
+          var beatSec = 60/seqTempo;
+          var dur = item.d * beatSec;
+          
+          if(item.n!=null){ playNote(item.n, dur); }
           seqPos++; 
-          seqTimer = setTimeout(tick, stepDur*1000);
+          seqTimer = setTimeout(tick, dur*1000);
         })();
     }
   }
@@ -419,7 +429,7 @@
 
 })();</script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=2.3.0"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.1.0"); }
 </script>
 </body>
 </html>

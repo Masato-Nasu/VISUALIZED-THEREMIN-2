@@ -1,7 +1,7 @@
 {
   "name": "Baby Theremin Animals",
   "short_name": "ThereminZoo",
-  "start_url": "./index.html?v=2.0.0",
+  "start_url": "./index.html?v=3.1.0",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
