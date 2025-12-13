@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Songs & Shapes</title>
-<link rel="manifest" href="./manifest.json?v=3.4.7">
+<link rel="manifest" href="./manifest.json?v=3.5.4">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -66,51 +66,27 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.3) ===
-   When version changes, purge old SW + caches once, then reload.
-   This prevents "更新されない" caused by stubborn Service Worker caches.
-*/
-const APP_VERSION = "3.4.7";
+/* === Hard update guard (v3.5.4) === */
+const APP_VERSION = "3.5.4";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
     if (last !== APP_VERSION) {
       localStorage.setItem("babyThereminVersion", APP_VERSION);
-
-      // Unregister any existing service workers under this scope
       if (navigator.serviceWorker) {
         const regs = await navigator.serviceWorker.getRegistrations();
         await Promise.all(regs.map(r => r.unregister()));
       }
-
-      // Delete caches used by older versions
       if (window.caches && caches.keys) {
         const keys = await caches.keys();
         await Promise.all(keys.filter(k => k.startsWith("baby-theremin-pd")).map(k => caches.delete(k)));
       }
-
-      // One-time forced reload (bypass caches)
       location.replace("./index.html?v=" + APP_VERSION + "&hard=1");
       return;
     }
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) {}
 })();
 </script>
-
-
-<style id="verbadge-style">
-#verBadge{position:fixed;right:10px;bottom:10px;z-index:99999;
-  font:12px/1.2 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-  color:rgba(255,255,255,.65);background:rgba(0,0,0,.25);
-  padding:6px 8px;border-radius:10px;backdrop-filter:blur(6px);
-  border:1px solid rgba(255,255,255,.12);user-select:none}
-#verBadge button{all:unset;cursor:pointer;margin-left:8px;
-  padding:2px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.18);
-  color:rgba(255,255,255,.75)}
-#verBadge button:active{transform:scale(0.98)}
-</style>
 
 </head>
 <body>
@@ -123,7 +99,7 @@ const APP_VERSION = "3.4.7";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.5.3</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>曲は自動で切り替わります v3.5.4</div>
   </div>
 </div>
 
@@ -203,7 +179,7 @@ const APP_VERSION = "3.4.7";
     analyser.connect(master);
     master.connect(actx.destination);
 
-    // --- Music-box-ish ambience (subtle delay) ---
+    // --- Music-box-ish ambience ---
     const mbDelay = actx.createDelay(0.45);
     mbDelay.delayTime.value = 0.18;
     const mbWet = actx.createGain();
@@ -378,15 +354,18 @@ const APP_VERSION = "3.4.7";
     (function tick(){
       if(!currentSong) return;
 
-      const idx = seqPos % song.seq.length;
-      if(idx===0){ beatInBar = 0; } // reset at loop boundary
+      // === 変更点：曲が終わったらランダムに次へ ===
+      if(seqPos >= song.seq.length){
+        seqTimer = setTimeout(()=>{
+          randomStart();
+        }, beatSec * 2000); // 2拍待って次へ
+        return;
+      }
 
-      const item = song.seq[idx];
+      const item = song.seq[seqPos];
       const beats = (item.d||1);
       const dur = beats * beatSec;
 
-      // Accent model: strong on downbeat, softer elsewhere; allow per-note override via item.v
-      const down = (beatInBar < 0.0001);
       const velAuto = 1.0;
       const vel = Math.max(0.35, Math.min(1.20, baseVel * (item.v ?? velAuto)));
 
@@ -401,9 +380,9 @@ const APP_VERSION = "3.4.7";
   }
   function randomStart(){ startSong(SONG_KEYS[(Math.random()*SONG_KEYS.length)|0]); }
 
-  // ===== SVG neon (cute animals, size follows theremin pitch) =====
-  const SHAPE_COUNT = 9;          // fewer
-  const LINE_BASE = 8;             // slightly thicker like the original neon
+  // ===== SVG neon (Hand-drawn style) =====
+  const SHAPE_COUNT = 9;
+  const LINE_BASE = 8;
   const BEAT_AMT = 0.14;
   let shapes = [];
   let t=0;
@@ -452,117 +431,100 @@ const APP_VERSION = "3.4.7";
     const [a,b,c] = neonStroke(p, color, LINE_BASE*2.2, LINE_BASE*1.45, Math.max(1, LINE_BASE*0.60));
     g.appendChild(a); g.appendChild(b); g.appendChild(c);
   }
-  function addCircle(g, cx, cy, r, color){
-    const c0 = el('circle');
-    c0.setAttribute('cx', String(cx));
-    c0.setAttribute('cy', String(cy));
-    c0.setAttribute('r', String(r));
-    const [a,b,c] = neonStroke(c0, color, LINE_BASE*2.2, LINE_BASE*1.45, Math.max(1, LINE_BASE*0.60));
-    g.appendChild(a); g.appendChild(b); g.appendChild(c);
-  }
-  function addSmile(g, d, color){
-    // thin cute smile (slightly less neon)
-    const p = el('path');
-    p.setAttribute('d', d);
-    const [a,b,c] = neonStroke(p, color, LINE_BASE*1.6, LINE_BASE*1.05, Math.max(1, LINE_BASE*0.45));
-    a.setAttribute('opacity','0.10');
-    b.setAttribute('opacity','0.70');
-    g.appendChild(a); g.appendChild(b); g.appendChild(c);
-  }
-  function addDot(g, cx, cy, r){
-    const c = el('circle');
-    c.setAttribute('cx', String(cx));
-    c.setAttribute('cy', String(cy));
-    c.setAttribute('r', String(r));
-    c.setAttribute('fill', '#ffffff');
-    c.setAttribute('opacity', '0.92');
-    c.setAttribute('stroke', 'none');
-    g.appendChild(c);
+  // Add explicit close path for shapes that need it
+  function addClosedPath(g, d, color){
+      addPath(g, d + ' Z', color);
   }
 
+  // === 変更点：手描きの線画に基づいた新しいSVGパス定義 ===
   function makeCuteAnimal(type, color){
     const g = el('g');
 
     if(type==='star'){
-      addPath(g, 'M 0 -1 L 0.235 -0.324 L 0.951 -0.309 L 0.381 0.124 L 0.588 0.809 L 0 0.4 L -0.588 0.809 L -0.381 0.124 L -0.951 -0.309 L -0.235 -0.324 Z', color);
-      addDot(g, 0.10, -0.08, 0.06);
-      addDot(g, -0.12, -0.05, 0.04);
+      // Hand-drawn star
+      addClosedPath(g, 'M 0 -0.95 L 0.25 -0.25 L 0.95 -0.25 L 0.4 0.15 L 0.6 0.85 L 0 0.45 L -0.6 0.85 L -0.4 0.15 L -0.95 -0.25 L -0.25 -0.25', color);
       return g;
     }
 
     if(type==='bear'){
-      addCircle(g, 0, 0, 0.95, color);
-      addCircle(g, -0.68, -0.70, 0.30, color);
-      addCircle(g,  0.68, -0.70, 0.30, color);
-      // eyes
-      addDot(g, -0.25, -0.05, 0.06);
-      addDot(g,  0.25, -0.05, 0.06);
-      // nose + smile
-      addCircle(g, 0, 0.18, 0.13, color);
-      addSmile(g, 'M -0.22 0.30 Q 0 0.40 0.22 0.30', color);
+      // Hand-drawn bear head
+      addClosedPath(g, 'M 0 0.9 C 0.6 0.9 0.95 0.5 0.95 0 C 0.95 -0.5 0.6 -0.9 0 -0.9 C -0.6 -0.9 -0.95 -0.5 -0.95 0 C -0.95 0.5 -0.6 0.9 0 0.9', color); // Head
+      addClosedPath(g, 'M -0.7 -0.75 C -0.9 -0.75 -1 -0.95 -1 -1.15 C -1 -1.35 -0.9 -1.55 -0.7 -1.55 C -0.5 -1.55 -0.4 -1.35 -0.4 -1.15 C -0.4 -0.95 -0.5 -0.75 -0.7 -0.75', color); // Left Ear
+      addClosedPath(g, 'M 0.7 -0.75 C 0.5 -0.75 0.4 -0.95 0.4 -1.15 C 0.4 -1.35 0.5 -1.55 0.7 -1.55 C 0.9 -1.55 1 -1.35 1 -1.15 C 1 -0.95 0.9 -0.75 0.7 -0.75', color); // Right Ear
+      // Face details (simple dots/lines for hand-drawn feel)
+      addPath(g, 'M -0.3 -0.1 L -0.3 -0.1', color); // Left eye dot
+      addPath(g, 'M 0.3 -0.1 L 0.3 -0.1', color);  // Right eye dot
+      addPath(g, 'M 0 0.2 L 0 0.4', color); // Nose line
+      addPath(g, 'M -0.2 0.4 Q 0 0.6 0.2 0.4', color); // Mouth
       return g;
     }
 
     if(type==='frog'){
-      addCircle(g, 0, 0.05, 0.95, color);
-      // eyes (big)
-      addCircle(g, -0.42, -0.42, 0.20, color);
-      addCircle(g,  0.42, -0.42, 0.20, color);
-      addDot(g, -0.42, -0.42, 0.06);
-      addDot(g,  0.42, -0.42, 0.06);
-      addSmile(g, 'M -0.35 0.30 Q 0 0.52 0.35 0.30', color);
-      return g;
+       // Hand-drawn frog
+       addClosedPath(g, 'M -0.8 0 C -0.8 -0.6 -0.4 -0.8 0 -0.8 C 0.4 -0.8 0.8 -0.6 0.8 0 C 0.8 0.5 0.4 0.8 0 0.8 C -0.4 0.8 -0.8 0.5 -0.8 0', color); // Face
+       addClosedPath(g, 'M -0.6 -0.7 C -0.8 -0.7 -0.9 -0.9 -0.9 -1.1 C -0.9 -1.3 -0.8 -1.4 -0.6 -1.4 C -0.4 -1.4 -0.3 -1.3 -0.3 -1.1 C -0.3 -0.9 -0.4 -0.7 -0.6 -0.7', color); // Left eye bump
+       addClosedPath(g, 'M 0.6 -0.7 C 0.4 -0.7 0.3 -0.9 0.3 -1.1 C 0.3 -1.3 0.4 -1.4 0.6 -1.4 C 0.8 -1.4 0.9 -1.3 0.9 -1.1 C 0.9 -0.9 0.8 -0.7 0.6 -0.7', color); // Right eye bump
+       addPath(g, 'M -0.6 -1.1 L -0.6 -1.1', color); // Left eye dot
+       addPath(g, 'M 0.6 -1.1 L 0.6 -1.1', color); // Right eye dot
+       addPath(g, 'M -0.4 0.2 Q 0 0.5 0.4 0.2', color); // Mouth
+       return g;
     }
 
     if(type==='sheep'){
-      // fluffy body (cloud)
-      addPath(g,
-        'M -0.85 0.05 C -0.98 -0.22 -0.72 -0.55 -0.38 -0.45 C -0.30 -0.78 0.15 -0.82 0.25 -0.55 C 0.55 -0.78 0.98 -0.35 0.75 -0.08 C 0.98 0.08 0.86 0.55 0.52 0.45 C 0.35 0.78 -0.22 0.78 -0.26 0.52 C -0.62 0.68 -0.98 0.40 -0.85 0.05 Z',
-        color
-      );
-      // face
-      addCircle(g, 0.78, 0.18, 0.30, color);
-      addDot(g, 0.70, 0.12, 0.05);
-      addDot(g, 0.86, 0.12, 0.05);
-      addSmile(g, 'M 0.70 0.28 Q 0.78 0.34 0.86 0.28', color);
+      // Hand-drawn sheep cloud body
+      addClosedPath(g, 'M -0.8 0 C -0.9 -0.3 -0.7 -0.6 -0.4 -0.6 C -0.2 -0.8 0.2 -0.8 0.4 -0.6 C 0.7 -0.6 0.9 -0.3 0.8 0 C 1.0 0.2 0.8 0.6 0.5 0.6 C 0.2 0.8 -0.2 0.8 -0.5 0.6 C -0.8 0.6 -1.0 0.2 -0.8 0', color);
+      // Head inside
+      addClosedPath(g, 'M -0.7 -0.1 C -0.8 -0.3 -0.7 -0.5 -0.5 -0.5 C -0.3 -0.5 -0.2 -0.3 -0.3 -0.1 C -0.4 0.1 -0.6 0.1 -0.7 -0.1', color);
+      addPath(g, 'M -0.6 -0.2 L -0.6 -0.2', color); // Eye dot
+      addPath(g, 'M -0.6 0 Q -0.5 0.1 -0.4 0', color); // Smile
+      // Legs
+      addPath(g, 'M -0.4 0.6 L -0.5 0.9', color);
+      addPath(g, 'M -0.2 0.6 L -0.2 0.9', color);
+      addPath(g, 'M 0.2 0.6 L 0.2 0.9', color);
+      addPath(g, 'M 0.4 0.6 L 0.5 0.9', color);
       return g;
     }
 
     if(type==='butterfly'){
-      // wings
-      addPath(g, 'M 0 -0.15 C -0.95 -0.95 -1.10 0.35 -0.20 0.22 C -0.90 0.85 -0.18 1.00 0 0.45', color);
-      addPath(g, 'M 0 -0.15 C 0.95 -0.95 1.10 0.35 0.20 0.22 C 0.90 0.85 0.18 1.00 0 0.45', color);
-      // body + antenna
-      addPath(g, 'M 0 -0.70 L 0 0.65', color);
-      addPath(g, 'M 0 -0.70 C -0.18 -0.92 -0.32 -0.98 -0.44 -1.05', color);
-      addPath(g, 'M 0 -0.70 C 0.18 -0.92 0.32 -0.98 0.44 -1.05', color);
-      addDot(g, 0, -0.05, 0.05);
+      // Hand-drawn wings
+      addClosedPath(g, 'M 0 0.5 C -0.8 1.2 -1.5 0.5 -1.5 -0.2 C -1.5 -0.8 -0.8 -1.2 0 -0.5 C 0.8 -1.2 1.5 -0.8 1.5 -0.2 C 1.5 0.5 0.8 1.2 0 0.5', color);
+      // Body
+      addClosedPath(g, 'M -0.1 -0.6 L 0.1 -0.6 L 0.1 0.4 L -0.1 0.4 Z', color);
+      // Antennae
+      addPath(g, 'M -0.1 -0.6 C -0.3 -0.9 -0.5 -0.9 -0.6 -0.8', color);
+      addPath(g, 'M 0.1 -0.6 C 0.3 -0.9 0.5 -0.9 0.6 -0.8', color);
+      addPath(g, 'M -0.6 -0.8 L -0.6 -0.8', color); // Dot
+      addPath(g, 'M 0.6 -0.8 L 0.6 -0.8', color); // Dot
+      // Face on upper wings
+      addPath(g, 'M -0.2 -0.3 L -0.2 -0.3', color); // Eye
+      addPath(g, 'M 0.2 -0.3 L 0.2 -0.3', color); // Eye
+      addPath(g, 'M 0 -0.1 Q 0.1 0 0.2 -0.1', color); // Smile
       return g;
     }
 
     if(type==='bee'){
-      // body oval
-      addPath(g, 'M -0.92 0 C -0.92 -0.55 -0.28 -0.85 0.30 -0.80 C 0.88 -0.75 0.98 -0.20 0.88 0.12 C 0.78 0.72 0.08 0.86 -0.34 0.66 C -0.84 0.44 -0.92 0.16 -0.92 0 Z', color);
-      // stripes
-      addPath(g, 'M -0.30 -0.62 L -0.30 0.58', color);
-      addPath(g, 'M 0 -0.72 L 0 0.70', color);
-      addPath(g, 'M 0.30 -0.62 L 0.30 0.58', color);
-      // wings (small)
-      addCircle(g, -0.20, -0.78, 0.26, color);
-      addCircle(g,  0.20, -0.78, 0.26, color);
-      // face
-      addDot(g, 0.55, -0.05, 0.06);
-      addDot(g, 0.70, -0.05, 0.06);
-      addSmile(g, 'M 0.56 0.15 Q 0.63 0.23 0.70 0.15', color);
-      // stinger
-      addPath(g, 'M 0.98 0 L 1.15 -0.10 L 1.15 0.10 Z', color);
+      // Hand-drawn body
+      addClosedPath(g, 'M -0.8 0 C -0.8 -0.5 0 -0.5 0.4 0 C 0 0.5 -0.8 0.5 -0.8 0', color);
+      // Stripes
+      addPath(g, 'M -0.4 -0.4 L -0.4 0.4', color);
+      addPath(g, 'M -0.1 -0.45 L -0.1 0.45', color);
+      addPath(g, 'M 0.2 -0.4 L 0.2 0.4', color);
+      // Wings
+      addClosedPath(g, 'M -0.2 -0.4 C -0.4 -1 0 -1.2 0.2 -0.4', color);
+      addClosedPath(g, 'M 0 -0.4 C 0.2 -0.9 0.6 -1 0.6 -0.3', color);
+      // Stinger
+      addPath(g, 'M 0.4 0 L 0.6 0', color);
+      // Face on left
+      addPath(g, 'M -0.6 -0.1 L -0.6 -0.1', color); // Eye
+      addPath(g, 'M -0.7 0.1 Q -0.6 0.2 -0.5 0.1', color); // Smile
       return g;
     }
 
-    // fallback
-    addPath(g, 'M 0 -1 L 0.235 -0.324 L 0.951 -0.309 L 0.381 0.124 L 0.588 0.809 L 0 0.4 L -0.588 0.809 L -0.381 0.124 L -0.951 -0.309 L -0.235 -0.324 Z', color);
+    // fallback to star
+    addClosedPath(g, 'M 0 -0.95 L 0.25 -0.25 L 0.95 -0.25 L 0.4 0.15 L 0.6 0.85 L 0 0.45 L -0.6 0.85 L -0.4 0.15 L -0.95 -0.25 L -0.25 -0.25', color);
     return g;
   }
+  // ==================================================
 
   function clearStageButDefs(){
     const kids = Array.from(stage.childNodes);
@@ -758,7 +720,7 @@ const APP_VERSION = "3.4.7";
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.1"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.4"); }
 </script>
 </body>
 </html>
