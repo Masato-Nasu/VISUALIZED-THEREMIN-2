@@ -1,4 +1,4 @@
-// sw.js v3.5.24
+// sw.js v3.5.25
 const VERSION = "3.5.22";
 const CACHE = `VISUALIZED-THEREMIN-2-v${VERSION.replaceAll('.', '-')}`;
 const ASSETS = [
