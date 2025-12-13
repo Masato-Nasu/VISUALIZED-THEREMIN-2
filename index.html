@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-<title>Baby Theremin – Round Frog Ver.</title>
-<link rel="manifest" href="./manifest.json?v=3.5.13">
+<title>Baby Theremin – Tap to Start</title>
+<link rel="manifest" href="./manifest.json?v=3.5.20">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -25,18 +25,6 @@
   }
   @supports (height: 100svh) { #stage { height:100svh; } }
 
-  .starter{position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-    background:transparent; z-index:100;
-  }
-  .starter .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px; padding:22px 18px;
-    box-shadow:0 10px 30px rgba(0,0,0,.08); text-align:center; color:#111; max-width:90vw
-  }
-  .starter .big{font-size:18px; margin-bottom:10px; font-weight:700;}
-  .starter .startbtn{appearance:none;border:0;background:#10b981;color:#fff;border-radius:12px;
-    padding:14px 22px;font-size:18px;cursor:pointer; width:100%; font-weight:700;
-  }
-  .small{font-size:12px;color:#6b7280;margin-top:10px; line-height:1.35}
-
   #songBar{
     position:fixed; left:10px; bottom:10px; z-index:60;
     display:flex; gap:8px; flex-wrap:wrap; max-width:80vw;
@@ -53,7 +41,6 @@
     font-size:20px;
   }
   .songBtn.active{ outline:2px solid #111827; outline-offset:2px; }
-  .songBtn:focus-visible{ outline:3px solid #111827; outline-offset:2px; }
 
   #emojiFallback{
     position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
@@ -63,11 +50,25 @@
     filter: drop-shadow(0 12px 22px rgba(0,0,0,.12));
   }
   #emojiFallback.show{ opacity:1; }
+
+  #hint{
+    position:fixed; left:50%; bottom:14px; transform:translateX(-50%);
+    font-size:12px; color:rgba(17,24,39,.55);
+    background:rgba(255,255,255,.72);
+    border:1px solid rgba(229,231,235,.9);
+    padding:6px 10px; border-radius:999px;
+    box-shadow:0 10px 22px rgba(0,0,0,.08);
+    z-index:70;
+    pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  #hint.hide{ opacity:0; }
+
 </style>
 
 <script>
-/* === Hard update guard (v3.5.13) === */
-const APP_VERSION = "3.5.13";
+/* === Hard update guard (v3.5.19) === */
+const APP_VERSION = "3.5.20";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -91,29 +92,21 @@ const APP_VERSION = "3.5.13";
 </head>
 <body>
 <div id="bg"></div>
-
-<div id="starter" class="starter">
-  <div class="card">
-    <div class="big">Baby Theremin</div>
-    <div>「はじめる」を押すと、<br>曲と形がランダムで始まるよ</div>
-    <div style="margin-top:12px;">
-      <button id="startbtn" class="startbtn">はじめる ▶</button>
-    </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.13</div>
-  </div>
 </div>
 
 <div id="emojiFallback" aria-hidden="true">☆</div>
 <svg id="stage" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
   <defs>
     <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feGaussianBlur stdDeviation="5" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
   </defs></svg>
+
+<div id="hint">タップで音が有効になります</div>
 
 <div id="songBar" aria-label="曲をえらぶ">
   <button class="songBtn" data-song="star" aria-label="きらきら星">☆</button>
@@ -126,8 +119,7 @@ const APP_VERSION = "3.5.13";
 
 <script>
 (function(){
-  const starter = document.getElementById('starter');
-  const startbtn = document.getElementById('startbtn');
+  const tapToStart = document.getElementById('tapToStart');
   const emojiFallback = document.getElementById('emojiFallback');
   const stage = document.getElementById('stage');
   const songButtons = Array.from(document.querySelectorAll('.songBtn'));
@@ -143,8 +135,6 @@ const APP_VERSION = "3.5.13";
   }
   fitStage();
   addEventListener('resize', fitStage, {passive:true});
-  addEventListener('orientationchange', fitStage, {passive:true});
-  if(window.visualViewport) visualViewport.addEventListener('resize', fitStage, {passive:true});
 
   function ptFromEvent(e){
     const r = stage.getBoundingClientRect();
@@ -179,7 +169,7 @@ const APP_VERSION = "3.5.13";
     analyser.connect(master);
     master.connect(actx.destination);
 
-    // --- Music-box-ish ambience ---
+    // Music box delay
     const mbDelay = actx.createDelay(0.45);
     mbDelay.delayTime.value = 0.18;
     const mbWet = actx.createGain();
@@ -208,10 +198,8 @@ const APP_VERSION = "3.5.13";
 
     // Theremin
     envGain = actx.createGain(); envGain.gain.value = 0.0;
-
     thFilter = actx.createBiquadFilter();
     thFilter.type = 'lowpass'; thFilter.frequency.value = 1200; thFilter.Q.value = 0.45;
-
     const thSoftLP = actx.createBiquadFilter();
     thSoftLP.type = 'lowpass';
     thSoftLP.frequency.value = 1400;
@@ -219,10 +207,8 @@ const APP_VERSION = "3.5.13";
 
     oscA = actx.createOscillator(); oscA.type = 'sine';
     oscB = actx.createOscillator(); oscB.type = 'sine'; oscB.detune.value = +6;
-
     lfoTrem = actx.createOscillator(); lfoTrem.type = 'sine'; lfoTrem.frequency.value = 0.9;
     lfoTremGain = actx.createGain(); lfoTremGain.gain.value = 0.05;
-
     lfoVib = actx.createOscillator(); lfoVib.type = 'sine'; lfoVib.frequency.value = 5.5;
     lfoVibGain = actx.createGain(); lfoVibGain.gain.value = 7.0;
 
@@ -231,11 +217,9 @@ const APP_VERSION = "3.5.13";
     thFilter.connect(thSoftLP);
     thSoftLP.connect(envGain);
     envGain.connect(thBus);
-
     lfoVib.connect(lfoVibGain);
     lfoVibGain.connect(oscA.detune);
     lfoVibGain.connect(oscB.detune);
-
     lfoTrem.connect(lfoTremGain);
     lfoTremGain.connect(envGain.gain);
 
@@ -252,61 +236,40 @@ const APP_VERSION = "3.5.13";
   function playNote(n, durSec, vel=1.0){
     if(!actx) return;
     const t0 = actx.currentTime;
-
     const o1 = actx.createOscillator();
     const o2 = actx.createOscillator();
     const o3 = actx.createOscillator();
-    o1.type = 'sine';
-    o2.type = 'sine';
-    o3.type = 'triangle';
-
+    o1.type = 'sine'; o2.type = 'sine'; o3.type = 'triangle';
     o1.frequency.value = n2f(n);
     o2.frequency.value = n2f(n-12);
     o3.frequency.value = n2f(n);
-    o1.detune.value = 0;
-    o3.detune.value = 0;
+    o1.detune.value = 0; o3.detune.value = 0;
 
-    const mix = actx.createGain();
-    mix.gain.value = 1.0;
-
+    const mix = actx.createGain(); mix.gain.value = 1.0;
     const g2 = actx.createGain(); g2.gain.value = 0.20;
     const g3 = actx.createGain(); g3.gain.value = 0.18;
-
-    o1.connect(mix);
-    o2.connect(g2).connect(mix);
-    o3.connect(g3).connect(mix);
+    o1.connect(mix); o2.connect(g2).connect(mix); o3.connect(g3).connect(mix);
 
     const g = actx.createGain();
     g.gain.setValueAtTime(0.0, t0);
     g.gain.linearRampToValueAtTime(Math.min(1.0, 0.18 + 0.82*vel), t0+0.008);
     g.gain.exponentialRampToValueAtTime(0.0001, t0+Math.max(0.08, durSec*0.92));
 
-    const hp = actx.createBiquadFilter();
-    hp.type = 'highpass';
-    hp.frequency.value = 140;
-
-    const lp = actx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 3200;
+    const hp = actx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 140;
+    const lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3200;
 
     mix.connect(hp).connect(lp).connect(g).connect(melodyBus);
 
     try{
       if(window.__mbNoise){
-        const ns = actx.createBufferSource();
-        ns.buffer = window.__mbNoise;
+        const ns = actx.createBufferSource(); ns.buffer = window.__mbNoise;
         const ng = actx.createGain();
         ng.gain.setValueAtTime(0.0, t0);
         ng.gain.linearRampToValueAtTime(0.16 + 0.30*vel, t0+0.003);
         ng.gain.exponentialRampToValueAtTime(0.0001, t0+0.03);
-
-        const nhp = actx.createBiquadFilter();
-        nhp.type = 'highpass';
-        nhp.frequency.value = 900;
-
+        const nhp = actx.createBiquadFilter(); nhp.type = 'highpass'; nhp.frequency.value = 900;
         ns.connect(nhp).connect(ng).connect(melodyBus);
-        ns.start(t0);
-        ns.stop(t0+0.05);
+        ns.start(t0); ns.stop(t0+0.05);
       }
     }catch(_e){}
 
@@ -324,7 +287,7 @@ const APP_VERSION = "3.5.13";
     bear: { label:'森のくまさん', icon:'🐻', tempo: 96, meter:4, baseVel:0.90, type:'bear', color:'#34d399',
       seq:[{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:72,d:1},{n:67,d:1},{n:64,d:1},{n:60,d:1},{n:69,d:2},{n:null,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:69,d:0.5},{n:67,d:1},{n:68,d:1},{n:69,d:1},{n:71,d:1},{n:72,d:2},{n:null,d:0.5},{n:67,d:0.5},{n:66,d:0.5},{n:67,d:0.5},{n:64,d:1},{n:null,d:1},{n:null,d:0.5},{n:64,d:0.5},{n:63,d:0.5},{n:64,d:0.5},{n:60,d:1},{n:null,d:1},{n:null,d:0.5},{n:64,d:0.5},{n:62,d:0.5},{n:60,d:0.5},{n:62,d:1},{n:null,d:1},{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:67,d:0.5},{n:64,d:1},{n:null,d:1},{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:72,d:1},{n:67,d:1},{n:64,d:1},{n:60,d:1},{n:69,d:2},{n:null,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:69,d:0.5},{n:67,d:1},{n:65,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:4},{n:null,d:1}] },
     butterfly: { label:'ちょうちょう', icon:'🦋', tempo:112, meter:4, baseVel:0.90, type:'butterfly', color:'#a78bfa',
-      seq:[{n:67,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:67,d:1},{n:67,d:2},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:2},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:2},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:1}] },
+      seq:[{n:67,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:67,d:1},{n:67,d:2},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:2},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:2},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:1}] },
     bee: { label:'ぶんぶんぶん', icon:'🐝', tempo:126, meter:4, baseVel:0.90, type:'bee', color:'#f472b6',
       seq:[{n:67,d:1},{n:65,d:1},{n:64,d:1},{n:null,d:1},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:60,d:1},{n:null,d:1},{n:64,d:0.5},{n:65,d:0.5},{n:67,d:0.5},{n:64,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:67,d:0.5},{n:64,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:67,d:1},{n:65,d:1},{n:64,d:1},{n:null,d:1},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:60,d:1},{n:null,d:1},{n:null,d:1}] },
     frog: { label:'かえるの合唱', icon:'🐸', tempo:112, meter:4, baseVel:0.90, type:'frog', color:'#60a5fa',
@@ -380,9 +343,9 @@ const APP_VERSION = "3.5.13";
   }
   function randomStart(){ startSong(SONG_KEYS[(Math.random()*SONG_KEYS.length)|0]); }
 
-  // ===== SVG neon (Tracing Style) =====
+  // ===== SVG neon =====
   const SHAPE_COUNT = 9;
-  const LINE_BASE = 9; 
+  const LINE_BASE = 10; 
   const BEAT_AMT = 0.14;
   let shapes = [];
   let t=0;
@@ -428,106 +391,91 @@ const APP_VERSION = "3.5.13";
     const [a,b,c] = neonStroke(p, color, LINE_BASE*2.4, LINE_BASE*1.5, Math.max(1, LINE_BASE*0.65));
     g.appendChild(a); g.appendChild(b); g.appendChild(c);
   }
-  function addCircle(g, cx, cy, r, color){
-    const p = el('circle');
-    p.setAttribute('cx', String(cx));
-    p.setAttribute('cy', String(cy));
-    p.setAttribute('r', String(r));
-    const [a,b,c] = neonStroke(p, color, LINE_BASE*2.4, LINE_BASE*1.5, Math.max(1, LINE_BASE*0.65));
-    g.appendChild(a); g.appendChild(b); g.appendChild(c);
+  
+  // Revised addDot: Creates a filled circle shape (not just stroke)
+  function addDot(g, cx, cy, color){
+    const r = 0.12; // Visible radius
+    // Draw a small circle path
+    // M cx-r cy A r r 0 1 0 cx+r cy A r r 0 1 0 cx-r cy
+    const d = `M ${cx-r} ${cy} A ${r} ${r} 0 1 0 ${cx+r} ${cy} A ${r} ${r} 0 1 0 ${cx-r} ${cy} Z`;
+    
+    // Create fill element
+    const fill = el('path');
+    fill.setAttribute('d', d);
+    fill.setAttribute('fill', color);
+    fill.setAttribute('stroke', 'none');
+    fill.setAttribute('opacity', '0.9');
+    
+    // Create stroke/glow for it
+    const [a,b,c] = neonStroke(fill, color, LINE_BASE*1.5, LINE_BASE*0.8, 1);
+    // Remove fill from stroke clones to avoid double opacity
+    a.setAttribute('fill', 'none');
+    b.setAttribute('fill', 'none');
+    c.setAttribute('fill', 'none');
+    
+    g.appendChild(a); g.appendChild(b); g.appendChild(c); 
+    g.appendChild(fill); // Core fill on top
   }
 
-  // === TRACING HAND-DRAWN SKETCH (Strict) ===
+  // === Shapes (Simple One Stroke Style) ===
   function makeCuteAnimal(type, color){
     const g = el('g');
 
     if(type==='star'){
-      // Rounded chubby star (keep)
       addPath(g, 'M 0 -0.95 Q 0.2 -0.4 0.9 -0.3 Q 0.4 0.1 0.6 0.85 Q 0 0.5 -0.6 0.85 Q -0.4 0.1 -0.9 -0.3 Q -0.2 -0.4 0 -0.95 Z', color);
-      addPath(g, 'M -0.25 -0.05 L -0.25 -0.05', color); 
-      addPath(g, 'M 0.25 -0.05 L 0.25 -0.05', color);
+      addDot(g, -0.25, -0.05, color);
+      addDot(g, 0.25, -0.05, color);
       return g;
     }
 
     if(type==='sheep'){
-      // [修正] 体（雲）の左端から「Uの字の顔」が突き出ている構造を再現
-      // Body: Cloud shape, flat bottom
-      addPath(g, 'M -0.5 0.5 Q -0.85 0.5 -0.85 0.2 Q -0.9 -0.2 -0.6 -0.5 Q -0.3 -0.7 0.0 -0.6 Q 0.4 -0.7 0.7 -0.5 Q 1.0 -0.3 0.9 0.1 Q 0.9 0.5 0.5 0.55 L -0.5 0.5', color);
-      // Face: Protruding U-shape on the left side
-      addPath(g, 'M -0.85 0.05 C -1.1 0.05 -1.15 0.35 -0.85 0.35', color);
-      // Face details
-      addCircle(g, -0.95, 0.15, 0.02, color); // Eye dot
-      // Legs: 4 sticks
+      addPath(g, 'M -0.5 0.5 C -0.8 0.5 -1.0 0.2 -0.9 -0.1 C -1.0 -0.4 -0.7 -0.7 -0.4 -0.7 C -0.1 -0.9 0.4 -0.8 0.6 -0.5 C 0.9 -0.4 1.1 -0.1 1.0 0.2 C 0.9 0.5 0.6 0.6 0.3 0.6 L -0.5 0.5', color);
+      addPath(g, 'M -0.85 0.0 C -1.05 0.0 -1.1 0.3 -0.85 0.3', color);
       addPath(g, 'M -0.4 0.5 L -0.45 0.8', color);
-      addPath(g, 'M -0.15 0.55 L -0.15 0.85', color);
+      addPath(g, 'M -0.1 0.55 L -0.1 0.85', color);
       addPath(g, 'M 0.3 0.55 L 0.3 0.85', color);
-      addPath(g, 'M 0.55 0.5 L 0.6 0.8', color);
+      addPath(g, 'M 0.6 0.5 L 0.65 0.8', color);
       return g;
     }
 
     if(type==='bear'){
-      // Head: Circle, slightly wider at bottom
-      addPath(g, 'M 0 -0.8 C 0.6 -0.8 0.9 -0.4 0.9 0.1 C 0.9 0.6 0.5 0.95 0 0.95 C -0.5 0.95 -0.9 0.6 -0.9 0.1 C -0.9 -0.4 -0.6 -0.8 0 -0.8', color);
-      // Ears: Semicircles
-      addPath(g, 'M -0.6 -0.65 C -0.9 -0.9 -0.4 -1.1 -0.35 -0.7', color);
-      addPath(g, 'M 0.6 -0.65 C 0.9 -0.9 0.4 -1.1 0.35 -0.7', color);
-      // Face: Dots and nose line
-      addCircle(g, -0.3, -0.1, 0.02, color); // Eye
-      addCircle(g, 0.3, -0.1, 0.02, color); // Eye
-      addCircle(g, 0, 0.2, 0.03, color); // Nose
-      addPath(g, 'M 0 0.23 L 0 0.5', color);
-      addPath(g, 'M -0.2 0.5 Q 0 0.6 0.2 0.5', color);
+      addPath(g, 'M -0.9 0 C -0.9 -0.6 -0.6 -0.9 0 -0.9 C 0.6 -0.9 0.9 -0.6 0.9 0 C 0.9 0.7 0.5 0.95 0 0.95 C -0.5 0.95 -0.9 0.7 -0.9 0', color); 
+      addPath(g, 'M -0.75 -0.6 C -1.0 -0.9 -0.4 -1.1 -0.3 -0.75', color); 
+      addPath(g, 'M 0.75 -0.6 C 1.0 -0.9 0.4 -1.1 0.3 -0.75', color); 
+      addDot(g, -0.3, -0.1, color);
+      addDot(g, 0.3, -0.1, color);
+      addDot(g, 0, 0.2, color); 
+      addPath(g, 'M 0 0.2 L 0 0.4', color);
+      addPath(g, 'M -0.2 0.4 Q 0 0.55 0.2 0.4', color);
       return g;
     }
 
     if(type==='butterfly'){
-      // Body: Long thin oval
-      addPath(g, 'M 0 -0.6 C -0.1 -0.6 -0.1 0.6 0 0.6 C 0.1 0.6 0.1 -0.6 0 -0.6', color);
-      // Head
-      addCircle(g, 0, -0.7, 0.12, color);
-      // Wings: B shaped
-      addPath(g, 'M -0.1 -0.4 C -1.0 -0.8 -1.2 0.4 -0.1 0.2 C -1.0 0.5 -0.6 1.0 -0.1 0.5', color);
-      addPath(g, 'M 0.1 -0.4 C 1.0 -0.8 1.2 0.4 0.1 0.2 C 1.0 0.5 0.6 1.0 0.1 0.5', color);
-      // Face details
-      addCircle(g, -0.04, -0.72, 0.015, color);
-      addCircle(g, 0.04, -0.72, 0.015, color);
-      addPath(g, 'M -0.04 -0.68 Q 0 -0.65 0.04 -0.68', color);
-      // Antennae
-      addPath(g, 'M -0.05 -0.8 L -0.15 -1.0', color);
-      addPath(g, 'M 0.05 -0.8 L 0.15 -1.0', color);
+      addPath(g, 'M 0 -0.2 C -0.9 -0.9 -1.2 0.3 -0.1 0.3 C -1.1 0.6 -0.5 1.1 0 0.5', color);
+      addPath(g, 'M 0 -0.2 C 0.9 -0.9 1.2 0.3 0.1 0.3 C 1.1 0.6 0.5 1.1 0 0.5', color);
+      addPath(g, 'M 0 -0.6 L 0 0.5', color);
+      addPath(g, 'M 0 -0.6 L -0.2 -0.85', color);
+      addPath(g, 'M 0 -0.6 L 0.2 -0.85', color);
       return g;
     }
 
     if(type==='bee'){
-      // Head (Circle) + Body (Oval with stripes)
-      addCircle(g, -0.5, 0, 0.3, color); // Head
-      addPath(g, 'M -0.3 0.1 C -0.3 -0.4 0.5 -0.4 0.6 0.1 C 0.6 0.5 -0.1 0.5 -0.3 0.1', color); // Body
-      // Stripes
-      addPath(g, 'M -0.1 -0.15 L -0.1 0.35', color);
-      addPath(g, 'M 0.15 -0.15 L 0.15 0.35', color);
-      addPath(g, 'M 0.4 -0.1 L 0.4 0.25', color);
-      // Stinger
-      addPath(g, 'M 0.6 0.1 L 0.8 0.1', color);
-      // Wings: Upright
-      addPath(g, 'M -0.15 -0.15 C -0.2 -0.8 0.1 -0.9 0.2 -0.15', color);
-      addPath(g, 'M 0.2 -0.15 C 0.3 -0.7 0.5 -0.7 0.45 -0.15', color);
-      // Face
-      addCircle(g, -0.6, -0.05, 0.02, color);
-      addPath(g, 'M -0.65 0.1 Q -0.55 0.2 -0.45 0.1', color);
-      // Legs
-      addPath(g, 'M -0.1 0.35 L -0.15 0.6', color);
-      addPath(g, 'M 0.1 0.35 L 0.1 0.6', color);
+      addPath(g, 'M -0.6 0 C -0.6 -0.4 0.6 -0.4 0.6 0 C 0.6 0.4 -0.6 0.4 -0.6 0', color);
+      addPath(g, 'M -0.1 -0.2 C -0.1 -0.9 0.4 -0.9 0.4 -0.2', color);
+      addPath(g, 'M -0.2 -0.28 L -0.2 0.28', color);
+      addPath(g, 'M 0.1 -0.32 L 0.1 0.32', color);
+      addPath(g, 'M 0.4 -0.28 L 0.4 0.28', color);
+      addPath(g, 'M 0.6 0 L 0.8 0', color);
       return g;
     }
 
     if(type==='frog'){
-       // [再修正] もっと丸っこく、目は点
-       // 輪郭: 全体的に丸いフォルムに変更。目の突起はなだらかに。
-       addPath(g, 'M -0.8 0.1 C -0.8 -0.4 -0.6 -0.6 -0.4 -0.6 C -0.4 -0.8 -0.1 -0.8 -0.1 -0.6 L 0.1 -0.6 C 0.1 -0.8 0.4 -0.8 0.4 -0.6 C 0.6 -0.6 0.8 -0.4 0.8 0.1 C 0.8 0.6 0.5 0.9 0 0.9 C -0.5 0.9 -0.8 0.6 -0.8 0.1', color);
-       // 目: シンプルな点（小さな塗りつぶし円）
-       addCircle(g, -0.25, -0.6, 0.03, color);
-       addCircle(g, 0.25, -0.6, 0.03, color);
-       // 口: 位置を調整
+       // Just a round circle
+       addPath(g, 'M 0 -0.7 C 0.5 -0.7 0.9 -0.4 0.9 0.1 C 0.9 0.6 0.5 0.9 0 0.9 C -0.5 0.9 -0.9 0.6 -0.9 0.1 C -0.9 -0.4 -0.5 -0.7 0 -0.7 Z', color);
+       // Eyes: Simple dots inside
+       addDot(g, -0.4, -0.2, color);
+       addDot(g, 0.4, -0.2, color);
+       // Mouth
        addPath(g, 'M -0.3 0.3 Q 0 0.5 0.3 0.3', color);
        return g;
     }
@@ -671,7 +619,10 @@ const APP_VERSION = "3.5.13";
   }
 
   stage.addEventListener('pointerdown', (e)=>{
+    const hint = document.getElementById('hint'); if(hint) hint.classList.add('hide');
+    if(tapToStart) tapToStart.classList.add('fadeout');
     resumeAudio();
+    if(!seqTimer && currentSong) startSong(currentSong);
     dragging=true;
     lastPos = ptFromEvent(e);
     if(lastPos) setPitchFromY(lastPos.y); 
@@ -708,16 +659,26 @@ const APP_VERSION = "3.5.13";
   function startApp(){
     if(started) return;
     started=true;
-    if(starter && starter.parentNode) starter.parentNode.removeChild(starter);
-    randomStart();
+
+    // Visuals start immediately (no separate start screen).
+    // Melody starts on the first user gesture (autoplay restriction).
+    currentSong = SONG_KEYS[(Math.random()*SONG_KEYS.length)|0];
+    setActiveButton(currentSong);
+    updateEmoji();
     resetShapes();
     requestAnimationFrame(drawLoop);
   }
 
-  startbtn.addEventListener('click', (e)=>{ e.stopPropagation(); startApp(); });
+  // Auto-start on load
+  window.addEventListener('DOMContentLoaded', () => {
+    startApp();
+  });
+
   songButtons.forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       e.preventDefault(); e.stopPropagation();
+      const hint = document.getElementById('hint'); if(hint) hint.classList.add('hide');
+      if(tapToStart) tapToStart.classList.add('fadeout');
       if(!started) startApp();
       startSong(btn.dataset.song);
       resetShapes();
@@ -726,7 +687,7 @@ const APP_VERSION = "3.5.13";
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.13"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.20"); }
 </script>
 </body>
 </html>
