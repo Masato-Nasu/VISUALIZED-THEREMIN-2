@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Round Frog Ver.</title>
-<link rel="manifest" href="./manifest.json?v=3.5.13">
+<link rel="manifest" href="./manifest.json?v=3.5.22">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -66,8 +66,8 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.21) === */
-const APP_VERSION = "3.5.13";
+/* === Hard update guard (v3.5.22) === */
+const APP_VERSION = "3.5.22";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -100,7 +100,7 @@ const APP_VERSION = "3.5.13";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.21</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.22</div>
   </div>
 </div>
 
@@ -720,8 +720,16 @@ const APP_VERSION = "3.5.13";
   }
   try{ window.__startApp = startApp; }catch(_e){}
 
+  // v3.5.22 patch: start on first touch anywhere (no button required)
+  const __startOnGesture = (e)=>{ try{ if(!started) startApp(); else resumeAudio(); }catch(_err){} };
+  window.addEventListener('pointerdown', __startOnGesture, {once:true, passive:true, capture:true});
+  window.addEventListener('touchstart', __startOnGesture, {once:true, passive:true, capture:true});
+  window.addEventListener('mousedown', __startOnGesture, {once:true, passive:true, capture:true});
 
-  startbtn.addEventListener('click', (e)=>{ e.stopPropagation(); startApp(); });
+
+
+  if(startbtn){ startbtn.addEventListener('click', (e)=>{ e.stopPropagation(); startApp(); }); }
+
   songButtons.forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       e.preventDefault(); e.stopPropagation();
@@ -736,9 +744,9 @@ const APP_VERSION = "3.5.13";
 if("serviceWorker" in navigator){  }
 </script>
 
-<!-- patch v3.5.21: hide starter, robust start, error overlay -->
+<!-- patch v3.5.22: hide starter, robust start, error overlay -->
 <div id="verTag" style="position:fixed;right:10px;bottom:10px;font:12px/1 system-ui;color:#00000055;z-index:9999;user-select:none;pointer-events:none;">
-  v3.5.21
+  v3.5.22
 </div>
 <div id="tapHint" style="position:fixed;left:12px;bottom:12px;font:14px/1.2 system-ui;color:#00000088;background:rgba(255,255,255,.65);backdrop-filter:blur(8px);padding:8px 10px;border-radius:14px;z-index:9999;user-select:none;">
   画面をタップすると開始（音が出ます）します
@@ -757,7 +765,7 @@ if("serviceWorker" in navigator){  }
 
   function showErr(msg) {
     panel.style.display = 'block';
-    panel.textContent = '⚠ エラー表示 (v3.5.21)\n' + msg;
+    panel.textContent = '⚠ エラー表示 (v3.5.22)\n' + msg;
   }
 
   window.addEventListener('error', (e) => {
@@ -779,7 +787,7 @@ if("serviceWorker" in navigator){  }
 
   // --- SW register (versioned) ---
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=3.5.21').catch(console.warn);
+    navigator.serviceWorker.register('./sw.js?v=3.5.22').catch(console.warn);
   }
 
   // --- Safe starter: try on load (may fail due to audio policy), then guarantee on first gesture ---
