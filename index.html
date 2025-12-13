@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Songs & Shapes</title>
-<link rel="manifest" href="./manifest.json?v=3.3.8">
+<link rel="manifest" href="./manifest.json?v=3.3.9">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -75,7 +75,7 @@
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.3.8</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.3.9</div>
   </div>
 </div>
 
@@ -621,11 +621,6 @@
       thFilter.frequency.setTargetAtTime(900 + n*1100, t0, 0.06);
     }
   }
-    if(actx && thFilter){
-      const t0 = actx.currentTime;
-      thFilter.frequency.setTargetAtTime(1100 + curve*900, t0, 0.06);
-    }
-  }
 
   function startTheremin(){
     if(!actx) return;
@@ -717,7 +712,7 @@
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.3.8"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.3.9"); }
 </script>
 </body>
 </html>
