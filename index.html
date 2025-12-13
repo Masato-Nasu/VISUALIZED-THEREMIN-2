@@ -75,7 +75,7 @@
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.4.5</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.4.6</div>
   </div>
 </div>
 
@@ -239,8 +239,8 @@
     o1.frequency.value = n2f(n);
     o2.frequency.value = n2f(n-12);
     o3.frequency.value = n2f(n);
-    o1.detune.value = -3;
-    o3.detune.value = +3;
+    o1.detune.value = 0;
+    o3.detune.value = 0;
 
     const mix = actx.createGain();
     mix.gain.value = 1.0;
@@ -298,7 +298,7 @@
     sheep: { label:'メリーさんの羊', icon:'🐑', tempo:110, meter:4, baseVel:0.92, type:'sheep', color:'#60a5fa',
       seq:[{n:64,d:1},{n:62,d:1},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:0.5},{n:62,d:1},{n:62,d:1},{n:62,d:2},{n:null,d:0.5},{n:64,d:1},{n:67,d:1},{n:67,d:2},{n:null,d:0.5},{n:64,d:1},{n:62,d:1},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:1},{n:62,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:2},{n:null,d:1}] },
     bear: { label:'森のくまさん', icon:'🐻', tempo:112, meter:4, baseVel:0.90, type:'bear', color:'#34d399',
-      seq:[{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:72,d:1},{n:67,d:1},{n:64,d:1},{n:48,d:1},{n:69,d:2},{n:69,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:67,d:1},{n:68,d:1},{n:69,d:1},{n:71,d:1},{n:72,d:2},{n:null,d:0.5},{n:67,d:0.5},{n:66,d:0.5},{n:67,d:0.5},{n:64,d:1},{n:null,d:1},{n:null,d:0.5},{n:64,d:0.5},{n:63,d:0.5},{n:64,d:0.5},{n:72,d:1},{n:null,d:1},{n:null,d:0.5},{n:64,d:0.5},{n:62,d:0.5},{n:60,d:0.5},{n:62,d:1},{n:null,d:1},{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:64,d:1},{n:null,d:1},{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:72,d:1},{n:67,d:1},{n:64,d:1},{n:48,d:1},{n:69,d:2},{n:null,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:69,d:0.5},{n:67,d:1},{n:65,d:1},{n:64,d:1},{n:62,d:1},{n:48,d:4},{n:null,d:1}] },
+      seq:[{n:72,d:1},{n:67,d:1},{n:64,d:1},{n:48,d:1},{n:69,d:2},{n:69,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:67,d:1},{n:68,d:1},{n:69,d:1},{n:71,d:1},{n:72,d:2},{n:null,d:0.5},{n:67,d:0.5},{n:66,d:0.5},{n:67,d:0.5},{n:64,d:1},{n:null,d:1},{n:null,d:0.5},{n:64,d:0.5},{n:63,d:0.5},{n:64,d:0.5},{n:72,d:1},{n:null,d:1},{n:null,d:0.5},{n:64,d:0.5},{n:62,d:0.5},{n:60,d:0.5},{n:62,d:1},{n:null,d:1},{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:64,d:1},{n:null,d:1},{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:72,d:1},{n:67,d:1},{n:64,d:1},{n:48,d:1},{n:69,d:2},{n:null,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:69,d:0.5},{n:67,d:1},{n:65,d:1},{n:64,d:1},{n:62,d:1},{n:48,d:4},{n:null,d:1}] },
     butterfly: { label:'ちょうちょう', icon:'🦋', tempo:112, meter:4, baseVel:0.90, type:'butterfly', color:'#a78bfa',
       seq:[{n:67,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:67,d:1},{n:67,d:2},{n:67,d:1},{n:64,d:1},{n:64,d:2},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:1}] },
     bee: { label:'ぶんぶんぶん', icon:'🐝', tempo:126, meter:4, baseVel:0.90, type:'bee', color:'#f472b6',
@@ -710,7 +710,7 @@
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.4.5"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.4.6"); }
 </script>
 </body>
 </html>
