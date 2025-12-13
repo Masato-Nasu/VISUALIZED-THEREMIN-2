@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Songs & Shapes</title>
-<link rel="manifest" href="./manifest.json?v=3.3.2">
+<link rel="manifest" href="./manifest.json?v=3.3.4">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -75,12 +75,21 @@
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.3.2</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.3.4</div>
   </div>
 </div>
 
 <div id="emojiFallback" aria-hidden="true">☆</div>
-<svg id="stage" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
+<svg id="stage" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+  <defs>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs></svg>
 
 <div id="songBar" aria-label="曲をえらぶ">
   <button class="songBtn" data-song="star" aria-label="きらきら星">☆</button>
@@ -346,7 +355,7 @@
   }
   function randomStart(){ startSong(SONG_KEYS[(Math.random()*SONG_KEYS.length)|0]); }
 
-  // ===== SVG neon =====
+  // ===== SVG neon (animal-by-song) =====
   const SHAPE_COUNT = 22;
   const LINE_BASE = 7;
   const BEAT_AMT = 0.18;
@@ -378,7 +387,7 @@
              'M -0.14 0.18 Q 0 0.30 0.14 0.18';
     }
     if(type==='butterfly'){
-      // butterfly: body + two wings (symmetry)
+      // butterfly: body + two wings
       return 'M 0 -0.72 L 0 0.72 ' +
              'M 0 -0.18 C -0.95 -0.95 -1.10 0.35 -0.20 0.22 C -0.90 0.85 -0.18 1.00 0 0.45 ' +
              'M 0 -0.18 C 0.95 -0.95 1.10 0.35 0.20 0.22 C 0.90 0.85 0.18 1.00 0 0.45 ' +
@@ -414,7 +423,9 @@
     p1.setAttribute('stroke-width', String(LINE_BASE*2.2));
     p1.setAttribute('stroke-linecap','round');
     p1.setAttribute('stroke-linejoin','round');
-    p1.setAttribute('opacity','0.14');
+    p1.setAttribute('opacity','0.16');
+    // soft glow (stable): blur inside SVG filter
+    p1.setAttribute('filter','url(#glow)');
 
     const p2 = el('path');
     p2.setAttribute('d', d);
@@ -423,40 +434,52 @@
     p2.setAttribute('stroke-width', String(LINE_BASE*1.45));
     p2.setAttribute('stroke-linecap','round');
     p2.setAttribute('stroke-linejoin','round');
-    p2.setAttribute('opacity','0.75');
+    p2.setAttribute('opacity','0.85');
 
     const p3 = el('path');
     p3.setAttribute('d', d);
     p3.setAttribute('fill', 'none');
     p3.setAttribute('stroke', '#ffffff');
-    p3.setAttribute('stroke-width', String(Math.max(1, LINE_BASE*0.7)));
+    p3.setAttribute('stroke-width', String(Math.max(1, LINE_BASE*0.60)));
     p3.setAttribute('stroke-linecap','round');
     p3.setAttribute('stroke-linejoin','round');
     p3.setAttribute('opacity','0.95');
-
-    g.style.filter = `drop-shadow(0px 0px 12px ${color}) drop-shadow(0px 0px 24px ${color})`;
 
     g.appendChild(p1); g.appendChild(p2); g.appendChild(p3);
     return g;
   }
 
+  function clearStageButDefs(){
+    // keep <defs> as first child
+    const kids = Array.from(stage.childNodes);
+    for(const k of kids){
+      if(k.nodeType===1 && k.nodeName.toLowerCase()==='defs') continue;
+      stage.removeChild(k);
+    }
+  }
+
   function resetShapes(){
     shapes.length = 0;
-    while(stage.firstChild) stage.removeChild(stage.firstChild);
-    const type = SONGS[currentSong]?.type || 'star';
-    const color = SONGS[currentSong]?.color || '#60a5fa';
+    clearStageButDefs();
+
+    const song = SONGS[currentSong] || SONGS.star;
+    const type = song.type || 'star';
+    const color = song.color || '#60a5fa';
+
+    // fallback emoji updates already handled elsewhere
     for(let i=0;i<SHAPE_COUNT;i++){
-      const r = 70*(0.6+Math.random()*0.6);
+      const r = 55*(0.75+Math.random()*1.10);
       const x = Math.random()*W;
       const y = Math.random()*H;
       const rot = Math.random()*Math.PI*2;
       const vx = (Math.random()-0.5)*0.55;
       const vy = (Math.random()-0.5)*0.55;
+
       const g = makeNeonGroup(color, type);
       stage.appendChild(g);
       shapes.push({type,color,x,y,r,rot,vx,vy,pulse:0,g});
     }
-    // SVG mode: hide emoji once we have shapes
+    // hide emoji once shapes are on screen
     emojiFallback.classList.remove('show');
   }
 
@@ -495,10 +518,9 @@
       const size = s.r * base * beatScale;
       s.pulse *= 0.92;
 
-      const sc = size;
       const tx = s.x, ty = s.y;
       const rotDeg = (s.rot * 180/Math.PI).toFixed(2);
-      s.g.setAttribute('transform', `translate(${tx.toFixed(2)},${ty.toFixed(2)}) rotate(${rotDeg}) scale(${sc.toFixed(3)})`);
+      s.g.setAttribute('transform', `translate(${tx.toFixed(2)},${ty.toFixed(2)}) rotate(${rotDeg}) scale(${size.toFixed(3)})`);
     }
     t++;
     requestAnimationFrame(drawLoop);
@@ -607,7 +629,7 @@
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.3.2"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.3.4"); }
 </script>
 </body>
 </html>
