@@ -1,7 +1,7 @@
 {
-  "name": "Baby Theremin Animals",
-  "short_name": "ThereminZoo",
-  "start_url": "./index.html?v=3.5.19",
+  "name": "Baby Theremin – Songs & Shapes",
+  "short_name": "Theremin",
+  "start_url": "./index.html?v=3.5.20",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
