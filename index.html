@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-<title>Baby Theremin – Cute Ver.</title>
-<link rel="manifest" href="./manifest.json?v=3.5.8">
+<title>Baby Theremin – Sketch Ver.</title>
+<link rel="manifest" href="./manifest.json?v=3.5.9">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -66,8 +66,8 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.8) === */
-const APP_VERSION = "3.5.8";
+/* === Hard update guard (v3.5.9) === */
+const APP_VERSION = "3.5.9";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -99,7 +99,7 @@ const APP_VERSION = "3.5.8";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>クマ修正 v3.5.8</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>手描きの絵を忠実に再現しました v3.5.9</div>
   </div>
 </div>
 
@@ -380,7 +380,7 @@ const APP_VERSION = "3.5.8";
   }
   function randomStart(){ startSong(SONG_KEYS[(Math.random()*SONG_KEYS.length)|0]); }
 
-  // ===== SVG neon (Kawaii Style) =====
+  // ===== SVG neon (Sketch Style) =====
   const SHAPE_COUNT = 9;
   const LINE_BASE = 9; 
   const BEAT_AMT = 0.14;
@@ -429,65 +429,95 @@ const APP_VERSION = "3.5.8";
     g.appendChild(a); g.appendChild(b); g.appendChild(c);
   }
 
-  // === KAWAII PATHS (Updated Bear) ===
+  // === SKETCH PATHS (Faithful to hand-drawn image) ===
   function makeCuteAnimal(type, color){
     const g = el('g');
 
     if(type==='star'){
+      // Keep previous cute star as requested "星以外"
       addPath(g, 'M 0 -0.95 Q 0.2 -0.4 0.9 -0.3 Q 0.4 0.1 0.6 0.85 Q 0 0.5 -0.6 0.85 Q -0.4 0.1 -0.9 -0.3 Q -0.2 -0.4 0 -0.95 Z', color);
       addPath(g, 'M -0.25 -0.05 L -0.25 -0.05', color); 
       addPath(g, 'M 0.25 -0.05 L 0.25 -0.05', color);
       return g;
     }
 
-    if(type==='bear'){
-      // [再修正] 王道のテディベア型（丸い顔・丸い耳・中心に寄った顔）
-      // Head: Round but slightly wide
-      addPath(g, 'M -0.9 0.0 C -0.9 -0.8 0.9 -0.8 0.9 0.0 C 0.9 0.8 -0.9 0.8 -0.9 0.0', color);
-      // Ears: Sitting nicely on top corners
-      addPath(g, 'M -0.8 -0.6 C -1.1 -0.9 -0.5 -1.1 -0.4 -0.65', color);
-      addPath(g, 'M 0.4 -0.65 C 0.5 -1.1 1.1 -0.9 0.8 -0.6', color);
-      // Face: Eyes dots, nose oval, small smile
-      addPath(g, 'M -0.3 -0.1 L -0.3 -0.1', color);
-      addPath(g, 'M 0.3 -0.1 L 0.3 -0.1', color);
-      addPath(g, 'M -0.1 0.2 Q 0 0.15 0.1 0.2 Q 0 0.25 -0.1 0.2', color); // Nose
-      addPath(g, 'M -0.2 0.35 Q 0 0.5 0.2 0.35', color); // Mouth
+    if(type==='sheep'){
+      // Body: Fluffy cloud, flat bottom
+      addPath(g, 'M -0.6 0.3 C -0.8 0.3 -0.9 0.1 -0.9 -0.1 C -0.9 -0.4 -0.6 -0.6 -0.4 -0.6 C -0.2 -0.8 0.2 -0.8 0.4 -0.6 C 0.6 -0.6 0.9 -0.4 0.9 -0.1 C 0.9 0.3 0.6 0.5 0.3 0.4 Q 0.1 0.3 -0.2 0.4', color);
+      // Face: U-shape protruding from left
+      addPath(g, 'M -0.85 -0.1 C -1.05 -0.1 -1.05 0.2 -0.85 0.2', color);
+      // Eye & Mouth
+      addPath(g, 'M -0.95 0.05 L -0.95 0.05', color); // dot
+      addPath(g, 'M -0.95 0.15 L -0.9 0.15', color); // line mouth
+      // Legs: Sticks
+      addPath(g, 'M -0.5 0.4 L -0.55 0.7', color);
+      addPath(g, 'M -0.3 0.4 L -0.3 0.7', color);
+      addPath(g, 'M 0.3 0.4 L 0.3 0.7', color);
+      addPath(g, 'M 0.5 0.4 L 0.55 0.7', color);
       return g;
     }
 
-    if(type==='sheep'){
-      addPath(g, 'M -0.5 0.6 Q -0.8 0.6 -0.9 0.3 Q -1.1 0 -0.9 -0.3 Q -0.7 -0.7 -0.3 -0.7 Q 0 -0.9 0.3 -0.7 Q 0.7 -0.7 0.9 -0.3 Q 1.1 0 0.9 0.3 Q 0.8 0.6 0.5 0.6', color);
-      addPath(g, 'M 0.5 0.1 A 0.3 0.3 0 1 1 0.5 -0.4', color);
-      addPath(g, 'M 0.6 -0.2 L 0.6 -0.2', color);
-      addPath(g, 'M -0.4 0.6 L -0.4 0.9', color);
-      addPath(g, 'M -0.1 0.6 L -0.1 0.9', color);
-      addPath(g, 'M 0.2 0.6 L 0.2 0.9', color);
+    if(type==='bear'){
+      // Outline: Distorted circle (not perfect)
+      addPath(g, 'M -0.85 0.1 C -0.9 -0.5 -0.7 -0.9 0 -0.9 C 0.7 -0.9 0.9 -0.5 0.85 0.1 C 0.8 0.7 0.5 0.95 0 0.95 C -0.5 0.95 -0.8 0.7 -0.85 0.1', color);
+      // Ears: Semicircles on top
+      addPath(g, 'M -0.7 -0.6 C -0.9 -0.9 -0.3 -1.1 -0.3 -0.75', color); // Left ear
+      addPath(g, 'M 0.7 -0.6 C 0.9 -0.9 0.3 -1.1 0.3 -0.75', color); // Right ear
+      // Face: Eyes are dots, Nose is circle, line down to smile
+      addPath(g, 'M -0.35 -0.15 L -0.35 -0.15', color);
+      addPath(g, 'M 0.35 -0.15 L 0.35 -0.15', color);
+      addPath(g, 'M 0 0.15 L 0 0.15', color); // Nose dot
+      addPath(g, 'M 0 0.15 L 0 0.35', color); // Line down
+      addPath(g, 'M -0.2 0.35 Q 0 0.45 0.2 0.35', color); // Smile line
       return g;
     }
 
     if(type==='butterfly'){
-      addPath(g, 'M -0.1 -0.4 Q -0.8 -0.9 -0.9 -0.3 Q -1.0 0.1 -0.1 0.1 Q -0.8 0.4 -0.6 0.9 Q -0.1 1.0 -0.1 0.4', color); 
-      addPath(g, 'M 0.1 -0.4 Q 0.8 -0.9 0.9 -0.3 Q 1.0 0.1 0.1 0.1 Q 0.8 0.4 0.6 0.9 Q 0.1 1.0 0.1 0.4', color);
-      addPath(g, 'M 0 -0.5 L 0 0.5', color);
-      addPath(g, 'M -0.3 -0.8 Q 0 -0.5 0.3 -0.8', color);
+      // Body: Long oval
+      addPath(g, 'M -0.1 -0.5 C -0.2 -0.5 -0.2 0.6 -0.1 0.6 C 0.05 0.6 0.05 -0.5 -0.1 -0.5', color);
+      // Wings: B shape
+      addPath(g, 'M -0.15 -0.2 C -1.0 -0.8 -1.2 0.2 -0.15 0.1 C -1.0 0.4 -0.6 0.9 -0.15 0.4', color); // Left
+      addPath(g, 'M 0.05 -0.2 C 0.9 -0.8 1.1 0.2 0.05 0.1 C 0.9 0.4 0.5 0.9 0.05 0.4', color); // Right
+      // Face: On top of body
+      addPath(g, 'M -0.1 -0.3 L -0.1 -0.3', color);
+      addPath(g, 'M 0.0 -0.3 L 0.0 -0.3', color);
+      addPath(g, 'M -0.1 -0.2 Q -0.05 -0.15 0.0 -0.2', color);
+      // Antennae: Lines only
+      addPath(g, 'M -0.1 -0.5 L -0.3 -0.8', color);
+      addPath(g, 'M 0.0 -0.5 L 0.2 -0.8', color);
       return g;
     }
 
     if(type==='bee'){
-      addPath(g, 'M -0.7 0 Q -0.7 -0.6 0 -0.6 Q 0.7 -0.6 0.7 0 Q 0.7 0.6 0 0.6 Q -0.7 0.6 -0.7 0 Z', color);
-      addPath(g, 'M -0.2 -0.55 Q -0.1 0 -0.2 0.55', color);
-      addPath(g, 'M 0.2 -0.55 Q 0.3 0 0.2 0.55', color);
-      addPath(g, 'M -0.2 -0.5 Q -0.5 -1.0 0 -1.0 Q 0.5 -1.0 0.2 -0.5', color);
-      addPath(g, 'M 0.7 0 L 0.9 0', color);
-      addPath(g, 'M -0.45 -0.1 L -0.45 -0.1', color);
-      addPath(g, 'M -0.45 0.2 Q -0.35 0.3 -0.25 0.2', color);
+      // Head (circle) & Body (oval) connected
+      addPath(g, 'M -0.5 0.0 C -0.5 -0.3 -0.3 -0.5 0 -0.5 C 0.3 -0.5 0.5 -0.3 0.5 0.0 C 0.5 0.3 0.3 0.5 0 0.5 C -0.3 0.5 -0.5 0.3 -0.5 0.0', color); // Head part
+      addPath(g, 'M 0.0 -0.4 L 0.7 -0.4 C 0.9 -0.4 0.9 0.4 0.7 0.4 L 0.0 0.4', color); // Body attached to head
+      // Stripes
+      addPath(g, 'M 0.25 -0.4 L 0.25 0.4', color);
+      addPath(g, 'M 0.5 -0.4 L 0.5 0.4', color);
+      // Wings: Upwards
+      addPath(g, 'M 0.1 -0.4 C -0.2 -1.0 0.2 -1.2 0.3 -0.4', color);
+      addPath(g, 'M 0.3 -0.4 C 0.6 -0.9 0.8 -0.8 0.5 -0.4', color);
+      // Stinger
+      addPath(g, 'M 0.75 0.0 L 0.95 0.0', color);
+      // Face (in head)
+      addPath(g, 'M -0.2 -0.1 L -0.2 -0.1', color); // eye
+      addPath(g, 'M -0.2 0.2 Q -0.1 0.3 0.0 0.2', color); // mouth
+      // Legs
+      addPath(g, 'M 0.1 0.4 L 0.1 0.7', color);
+      addPath(g, 'M 0.3 0.4 L 0.3 0.7', color);
       return g;
     }
 
     if(type==='frog'){
-       addPath(g, 'M -0.9 0.1 C -0.9 -0.3 -0.7 -0.5 -0.6 -0.6 C -0.7 -0.9 -0.4 -1.1 -0.2 -0.9 C 0 -0.8 0 -0.8 0.2 -0.9 C 0.4 -1.1 0.7 -0.9 0.6 -0.6 C 0.7 -0.5 0.9 -0.3 0.9 0.1 C 0.9 0.6 0.5 0.9 0 0.9 C -0.5 0.9 -0.9 0.6 -0.9 0.1', color);
-       addPath(g, 'M -0.45 -0.6 L -0.45 -0.6', color);
-       addPath(g, 'M 0.45 -0.6 L 0.45 -0.6', color);
+       // Outline: Bumps are part of the line
+       addPath(g, 'M -0.9 0.0 C -0.9 -0.5 -0.7 -0.5 -0.5 -0.5 C -0.5 -0.9 -0.1 -0.9 -0.1 -0.5 C 0.1 -0.5 0.1 -0.5 0.1 -0.5 C 0.1 -0.9 0.5 -0.9 0.5 -0.5 C 0.7 -0.5 0.9 -0.5 0.9 0.0 C 0.9 0.6 0.5 0.8 0 0.8 C -0.5 0.8 -0.9 0.6 -0.9 0.0', color);
+       // Eyes: Circles inside the bumps
+       addPath(g, 'M -0.3 -0.6 C -0.4 -0.6 -0.4 -0.4 -0.3 -0.4 C -0.2 -0.4 -0.2 -0.6 -0.3 -0.6', color); // Left eye outline
+       addPath(g, 'M 0.3 -0.6 C 0.2 -0.6 0.2 -0.4 0.3 -0.4 C 0.4 -0.4 0.4 -0.6 0.3 -0.6', color); // Right eye outline
+       addPath(g, 'M -0.3 -0.5 L -0.3 -0.5', color); // pupil
+       addPath(g, 'M 0.3 -0.5 L 0.3 -0.5', color); // pupil
+       // Mouth: Wide curve
        addPath(g, 'M -0.3 0.3 Q 0 0.5 0.3 0.3', color);
        return g;
     }
@@ -686,7 +716,7 @@ const APP_VERSION = "3.5.8";
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.8"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.9"); }
 </script>
 </body>
 </html>
