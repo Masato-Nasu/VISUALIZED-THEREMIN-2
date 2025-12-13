@@ -1,5 +1,5 @@
-// sw.js v3.5.1
-const CACHE='baby-theremin-pd-v3-5-1';
+// sw.js v3.5.3
+const CACHE='baby-theremin-pd-v3-5-3';
 const ASSETS=[
   './',
   './index.html?v=3.5.1',
