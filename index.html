@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-<title>Baby Theremin – One Stroke</title>
-<link rel="manifest" href="./manifest.json?v=3.5.15">
+<title>Baby Theremin – Clear Outline</title>
+<link rel="manifest" href="./manifest.json?v=3.5.16">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -66,8 +66,8 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.15) === */
-const APP_VERSION = "3.5.15";
+/* === Hard update guard (v3.5.16) === */
+const APP_VERSION = "3.5.16";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -99,7 +99,7 @@ const APP_VERSION = "3.5.15";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>一筆書きの輪郭にしました v3.5.15</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルの形をわかりやすくしました v3.5.16</div>
   </div>
 </div>
 
@@ -429,13 +429,10 @@ const APP_VERSION = "3.5.15";
     g.appendChild(a); g.appendChild(b); g.appendChild(c);
   }
   
-  // Use simple lines for dots to avoid donut issue with filled circles in neon
   function addDot(g, cx, cy, color){
     const p = el('path');
-    // A zero-length line with round cap looks like a dot
     p.setAttribute('d', `M ${cx} ${cy} L ${cx} ${cy}`);
     const [a,b,c] = neonStroke(p, color, LINE_BASE*2.4, LINE_BASE*1.5, Math.max(1, LINE_BASE*0.65));
-    // thicken the dot slightly by overriding stroke width for the dot only
     a.setAttribute('stroke-width', String(LINE_BASE*3.5));
     b.setAttribute('stroke-width', String(LINE_BASE*2.5));
     c.setAttribute('stroke-width', String(LINE_BASE*1.2));
@@ -454,11 +451,8 @@ const APP_VERSION = "3.5.15";
     }
 
     if(type==='sheep'){
-      // Cloud contour
       addPath(g, 'M -0.5 0.5 C -0.8 0.5 -1.0 0.2 -0.9 -0.1 C -1.0 -0.4 -0.7 -0.7 -0.4 -0.7 C -0.1 -0.9 0.4 -0.8 0.6 -0.5 C 0.9 -0.4 1.1 -0.1 1.0 0.2 C 0.9 0.5 0.6 0.6 0.3 0.6 L -0.5 0.5', color);
-      // Simple face loop
       addPath(g, 'M -0.85 0.0 C -1.05 0.0 -1.1 0.3 -0.85 0.3', color);
-      // Legs (single lines)
       addPath(g, 'M -0.4 0.5 L -0.45 0.8', color);
       addPath(g, 'M -0.1 0.55 L -0.1 0.85', color);
       addPath(g, 'M 0.3 0.55 L 0.3 0.85', color);
@@ -467,52 +461,44 @@ const APP_VERSION = "3.5.15";
     }
 
     if(type==='bear'){
-      // Head and ears as one continuous loop if possible, but separate is cleaner for "icon"
-      // Outline: Head + Ears merged
-      addPath(g, 'M -0.9 0 C -0.9 -0.6 -0.6 -0.9 0 -0.9 C 0.6 -0.9 0.9 -0.6 0.9 0 C 0.9 0.7 0.5 0.95 0 0.95 C -0.5 0.95 -0.9 0.7 -0.9 0', color); // Head
-      addPath(g, 'M -0.75 -0.6 C -1.0 -0.9 -0.4 -1.1 -0.3 -0.75', color); // Left Ear
-      addPath(g, 'M 0.75 -0.6 C 1.0 -0.9 0.4 -1.1 0.3 -0.75', color); // Right Ear
-      // Face: Simple dots and line
+      // Outline: Head + Ears merged (One line)
+      addPath(g, 'M -0.9 0 C -0.9 -0.6 -0.6 -0.9 0 -0.9 C 0.6 -0.9 0.9 -0.6 0.9 0 C 0.9 0.7 0.5 0.95 0 0.95 C -0.5 0.95 -0.9 0.7 -0.9 0', color); 
+      addPath(g, 'M -0.75 -0.6 C -1.0 -0.9 -0.4 -1.1 -0.3 -0.75', color); 
+      addPath(g, 'M 0.75 -0.6 C 1.0 -0.9 0.4 -1.1 0.3 -0.75', color); 
       addDot(g, -0.3, -0.1, color);
       addDot(g, 0.3, -0.1, color);
-      addDot(g, 0, 0.2, color); // Nose
+      addDot(g, 0, 0.2, color); 
       addPath(g, 'M 0 0.2 L 0 0.4', color);
       addPath(g, 'M -0.2 0.4 Q 0 0.55 0.2 0.4', color);
       return g;
     }
 
     if(type==='butterfly'){
-      // Wings
       addPath(g, 'M 0 -0.2 C -0.9 -0.9 -1.2 0.3 -0.1 0.3 C -1.1 0.6 -0.5 1.1 0 0.5', color);
       addPath(g, 'M 0 -0.2 C 0.9 -0.9 1.2 0.3 0.1 0.3 C 1.1 0.6 0.5 1.1 0 0.5', color);
-      // Body stick
       addPath(g, 'M 0 -0.6 L 0 0.5', color);
-      // Antennae
       addPath(g, 'M 0 -0.6 L -0.2 -0.85', color);
       addPath(g, 'M 0 -0.6 L 0.2 -0.85', color);
       return g;
     }
 
     if(type==='bee'){
-      // Body loop
       addPath(g, 'M -0.6 0 C -0.6 -0.4 0.6 -0.4 0.6 0 C 0.6 0.4 -0.6 0.4 -0.6 0', color);
-      // Wings loop
       addPath(g, 'M -0.1 -0.2 C -0.1 -0.9 0.4 -0.9 0.4 -0.2', color);
-      // Stripes
       addPath(g, 'M -0.2 -0.28 L -0.2 0.28', color);
       addPath(g, 'M 0.1 -0.32 L 0.1 0.32', color);
       addPath(g, 'M 0.4 -0.28 L 0.4 0.28', color);
-      // Stinger
       addPath(g, 'M 0.6 0 L 0.8 0', color);
       return g;
     }
 
     if(type==='frog'){
-       // Just a round face (as requested)
-       addPath(g, 'M 0 -0.7 C 0.5 -0.7 0.9 -0.4 0.9 0.1 C 0.9 0.6 0.5 0.9 0 0.9 C -0.5 0.9 -0.9 0.6 -0.9 0.1 C -0.9 -0.4 -0.5 -0.7 0 -0.7 Z', color);
-       // Eyes: Simple dots
-       addDot(g, -0.4, -0.2, color);
-       addDot(g, 0.4, -0.2, color);
+       // [Modified] Distinct Frog Silhouette (Bump on head for eyes)
+       // This creates a "Mickey Mouse hat" style bump which is classic frog icon
+       addPath(g, 'M -0.8 0 C -0.8 -0.5 -0.6 -0.8 -0.3 -0.8 C -0.2 -0.8 -0.1 -0.7 0 -0.6 C 0.1 -0.7 0.2 -0.8 0.3 -0.8 C 0.6 -0.8 0.8 -0.5 0.8 0 C 0.8 0.6 0.5 0.9 0 0.9 C -0.5 0.9 -0.8 0.6 -0.8 0', color);
+       // Eyes: Dots inside the bumps
+       addDot(g, -0.4, -0.4, color);
+       addDot(g, 0.4, -0.4, color);
        // Mouth
        addPath(g, 'M -0.3 0.3 Q 0 0.5 0.3 0.3', color);
        return g;
@@ -712,7 +698,7 @@ const APP_VERSION = "3.5.15";
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.15"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.16"); }
 </script>
 </body>
 </html>
