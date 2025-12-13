@@ -28,16 +28,7 @@
 </head>
 <body>
 <div id="app">
-  <div id="starter" class="starter">
-    <div class="card">
-      <div class="big">🐶 Baby Theremin Animals 🐘</div>
-      <div>「はじめる」を押すと、<br>どうぶつの曲がランダムで流れるよ！</div>
-      <div style="margin-top:12px;">
-        <button id="startbtn" class="startbtn">はじめる ▶</button>
-      </div>
-      <div class="small">短タップ：はじける ／ 長押し：テルミン<br>（2本指長押しで設定パネル）v3.1.5</div>
-    </div>
-  </div>
+<div id="app"></div>
 </div>
 
 <div class="controls hidden" id="controls">
@@ -166,12 +157,7 @@
     }
   }
 
-  startbtn.addEventListener('click', function(e){ e.stopPropagation(); startAll(null); });
-  document.addEventListener('pointerdown', function one(){ 
-    if(starter && starter.parentNode) { startAll(null); }
-    document.removeEventListener('pointerdown', one, {capture:false}); 
-  }, {capture:false, once:true});
-
+  if(startbtn){ startbtn.addEventListener('click', function(e){ e.stopPropagation(); startAll(null); }); }
   // ====== Canvas & Interaction ======
   var t=0, visScale=1, shapes=[];
   var COLORS=["#60a5fa","#f472b6","#facc15","#a78bfa","#34d399"];
@@ -313,7 +299,7 @@
   var seqTimer=null, seqPos=0, seqData=null, seqTempo=100;
   function stopPreset(){ if(seqTimer){ clearTimeout(seqTimer); seqTimer=null; } seqPos=0; }
   
-  // v3.1.5: Play Note with Duration
+  // v3.1.6: Play Note with Duration
   function playNote(n, dur){
       var t=actx.currentTime; var o=actx.createOscillator(); o.type='triangle'; 
       var g=actx.createGain(); g.gain.value=0.0; var f=440*Math.pow(2,(n-69)/12); 
@@ -429,18 +415,75 @@
 
 })();</script>
 <script>
-if("serviceWorker" in navigator){ /* SW disabled to avoid stale cache */ }
-
-// --- autostart (v3.1.5) ---
-// 起動直後に実行画面へ（絵柄ロジックは変更しない）。
-window.addEventListener('load', () => {
-  try {
-    if (typeof startAll === 'function') startAll(null);
-  } catch(e) {
-    console.warn('autostart failed', e);
-  }
-}, { once:true });
-
 </script>
+
+<div id="verBadge" style="position:fixed;right:10px;bottom:10px;z-index:9999;
+  font:12px/1.2 system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;
+  color:#111;background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.08);
+  border-radius:12px;padding:8px 10px;backdrop-filter: blur(6px);">
+  <span style="margin-right:10px;">v3.1.6</span>
+  <button id="hardReload" style="appearance:none;border:0;background:#111;color:#fff;border-radius:10px;padding:6px 10px;">↻</button>
+</div>
+
+
+<script>
+(function(){
+  // === v3.1.6 autostart (no start screen) ===
+  // 1) Stop old SW cache from haunting this app.
+  async function nukeSW(){
+    try {
+      if (!('serviceWorker' in navigator)) return;
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    } catch(e){}
+    try {
+      if (!('caches' in window)) return;
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    } catch(e){}
+  }
+
+  // 2) Hard reload button (also clears caches/SW)
+  const btn = document.getElementById('hardReload');
+  if(btn){
+    btn.addEventListener('click', async (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      await nukeSW();
+      const url = new URL(location.href);
+      url.searchParams.set('v','316');
+      location.replace(url.toString());
+    });
+  }
+
+  // 3) Start visuals immediately (audio will start after first user gesture due to browser policy)
+  function safeStart(){
+    try {
+      // ensure canvas exists even without user gesture
+      if(typeof startAll==='function') startAll(null);
+    } catch(e){ console.log(e); }
+  }
+
+  // Run cleanup in background (no waiting) then start visuals
+  nukeSW();
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', safeStart, {once:true});
+  } else {
+    safeStart();
+  }
+
+  // 4) On first gesture, resume audio context (if any)
+  function resumeOnGesture(){
+    try {
+      if(window.actx && window.actx.state!=='running') window.actx.resume();
+      if(window.audio && window.audio.paused) window.audio.play().catch(()=>{});
+    } catch(e){}
+    window.removeEventListener('pointerdown', resumeOnGesture, true);
+    window.removeEventListener('touchstart', resumeOnGesture, true);
+  }
+  window.addEventListener('pointerdown', resumeOnGesture, true);
+  window.addEventListener('touchstart', resumeOnGesture, true);
+})();
+</script>
+
 </body>
 </html>

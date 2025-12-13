@@ -34,4 +34,7 @@
 
 ---
 License: MIT (or your preferred license)
-- v3.1.5: Service Worker を無効化（古いキャッシュが出続ける問題を根本的に回避）。起動直後に実行画面へ。
+
+---
+
+- v3.1.6: 起動画面（「はじめる」）を廃止し、起動直後に実行画面へ。Service Worker を解除してキャッシュ問題を回避。
