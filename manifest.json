@@ -20,5 +20,8 @@
     }
   ],
   "scope": "./",
-  "id": "/VISUALIZED-THEREMIN-2/"
+  "id": "/VISUALIZED-THEREMIN-2/",
+  "display_override": [
+    "standalone"
+  ]
 }
