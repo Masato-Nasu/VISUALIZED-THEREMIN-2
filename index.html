@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Songs & Shapes</title>
-<link rel="manifest" href="./manifest.json?v=3.2.6">
+<link rel="manifest" href="./manifest.json?v=3.2.7">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -63,7 +63,7 @@
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.2.6</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.2.7</div>
   </div>
 </div>
 
@@ -140,7 +140,38 @@
     analyser.connect(master);
     master.connect(actx.destination);
 
-    // Theremin
+    
+    // --- Music-box-ish ambience (subtle delay) ---
+    const mbDelay = actx.createDelay(0.45);
+    mbDelay.delayTime.value = 0.18;
+    const mbWet = actx.createGain();
+    mbWet.gain.value = 0.34;
+    const mbFb = actx.createGain();
+    mbFb.gain.value = 0.18;
+    const mbFbLP = actx.createBiquadFilter();
+    mbFbLP.type = 'lowpass';
+    mbFbLP.frequency.value = 1800;
+
+    // feedback loop
+    mbDelay.connect(mbFbLP);
+    mbFbLP.connect(mbFb);
+    mbFb.connect(mbDelay);
+
+    // send melody into delay (wet) and back to analyser
+    melodyBus.connect(mbDelay);
+    mbDelay.connect(mbWet);
+    mbWet.connect(analyser);
+
+    // prebuild a tiny "strike" noise buffer for music-box attack
+    const noiseLen = Math.floor(actx.sampleRate * 0.03);
+    window.__mbNoise = actx.createBuffer(1, noiseLen, actx.sampleRate);
+    const ch = window.__mbNoise.getChannelData(0);
+    for(let i=0;i<noiseLen;i++){
+      // quick decay
+      const env = Math.pow(1 - i/noiseLen, 2.4);
+      ch[i] = (Math.random()*2-1) * env * 0.35;
+    }
+// Theremin
     envGain = actx.createGain(); envGain.gain.value = 0.0;
     thFilter = actx.createBiquadFilter();
     thFilter.type = 'lowpass'; thFilter.frequency.value = 1700; thFilter.Q.value = 0.7;
@@ -182,34 +213,74 @@
     if(!actx) return;
     const t0 = actx.currentTime;
 
-    const o1 = actx.createOscillator();
-    const o2 = actx.createOscillator();
-    const g = actx.createGain();
-    const lp = actx.createBiquadFilter();
-
+    // Main partials
+    const o1 = actx.createOscillator(); // bright
+    const o2 = actx.createOscillator(); // body (octave below)
+    const o3 = actx.createOscillator(); // a little triangle edge
     o1.type = 'sine';
     o2.type = 'sine';
+    o3.type = 'triangle';
+
     o1.frequency.value = n2f(n);
-    o2.frequency.value = n2f(n-12); // octave below
+    o2.frequency.value = n2f(n-12);
+    o3.frequency.value = n2f(n);
 
-    lp.type = 'lowpass'; lp.frequency.value = 2600;
-
-    g.gain.setValueAtTime(0.0, t0);
-    g.gain.linearRampToValueAtTime(0.90, t0+0.015);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0+Math.max(0.06, durSec*0.93));
+    // Small detune makes it feel "instrumental" (still safe for recognition)
+    o1.detune.value = -3;
+    o3.detune.value = +3;
 
     const mix = actx.createGain();
     mix.gain.value = 1.0;
+
+    const g2 = actx.createGain(); g2.gain.value = 0.20;
+    const g3 = actx.createGain(); g3.gain.value = 0.18;
+
     o1.connect(mix);
-    const g2 = actx.createGain(); g2.gain.value = 0.22;
     o2.connect(g2).connect(mix);
+    o3.connect(g3).connect(mix);
 
-    mix.connect(lp).connect(g).connect(melodyBus);
+    // Pluck envelope
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0, t0);
+    g.gain.linearRampToValueAtTime(0.95, t0+0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+Math.max(0.08, durSec*0.92));
 
-    o1.start(t0); o2.start(t0);
-    o1.stop(t0 + durSec + 0.02);
-    o2.stop(t0 + durSec + 0.02);
+    // Filtering for music-box character
+    const hp = actx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 140;
+
+    const lp = actx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 3200;
+
+    mix.connect(hp).connect(lp).connect(g).connect(melodyBus);
+
+    // Tiny strike (noise) at note-on, for recognizability
+    try{
+      if(window.__mbNoise){
+        const ns = actx.createBufferSource();
+        ns.buffer = window.__mbNoise;
+        const ng = actx.createGain();
+        ng.gain.setValueAtTime(0.0, t0);
+        ng.gain.linearRampToValueAtTime(0.35, t0+0.003);
+        ng.gain.exponentialRampToValueAtTime(0.0001, t0+0.03);
+
+        const nhp = actx.createBiquadFilter();
+        nhp.type = 'highpass';
+        nhp.frequency.value = 900;
+
+        ns.connect(nhp).connect(ng).connect(melodyBus);
+        ns.start(t0);
+        ns.stop(t0+0.05);
+      }
+    }catch(_e){}
+
+    o1.start(t0); o2.start(t0); o3.start(t0);
+    const stopT = t0 + durSec + 0.04;
+    o1.stop(stopT); o2.stop(stopT); o3.stop(stopT);
   }
+
 
   // ===== Songs (recognition priority) =====
   // d: quarter-note units (1 = quarter, 0.5 = eighth, 2 = half)
@@ -615,7 +686,7 @@
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.2.6"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.2.7"); }
 </script>
 </body>
 </html>
