@@ -35,7 +35,7 @@
       <div style="margin-top:12px;">
         <button id="startbtn" class="startbtn">はじめる ▶</button>
       </div>
-      <div class="small">短タップ：はじける ／ 長押し：テルミン<br>（2本指長押しで設定パネル）v3.1.4</div>
+      <div class="small">短タップ：はじける ／ 長押し：テルミン<br>（2本指長押しで設定パネル）v3.1.5</div>
     </div>
   </div>
 </div>
@@ -313,7 +313,7 @@
   var seqTimer=null, seqPos=0, seqData=null, seqTempo=100;
   function stopPreset(){ if(seqTimer){ clearTimeout(seqTimer); seqTimer=null; } seqPos=0; }
   
-  // v3.1.4: Play Note with Duration
+  // v3.1.5: Play Note with Duration
   function playNote(n, dur){
       var t=actx.currentTime; var o=actx.createOscillator(); o.type='triangle'; 
       var g=actx.createGain(); g.gain.value=0.0; var f=440*Math.pow(2,(n-69)/12); 
@@ -429,15 +429,14 @@
 
 })();</script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.1.4"); }
+if("serviceWorker" in navigator){ /* SW disabled to avoid stale cache */ }
 
-// --- autostart (v3.1.4) ---
-// 起動画面(starter)は残しても良いが、初回表示で即 startAll() を呼ぶ。
-// 音はブラウザ制限により、最初のユーザー操作で有効化される場合があります。
+// --- autostart (v3.1.5) ---
+// 起動直後に実行画面へ（絵柄ロジックは変更しない）。
 window.addEventListener('load', () => {
   try {
     if (typeof startAll === 'function') startAll(null);
-  } catch (e) {
+  } catch(e) {
     console.warn('autostart failed', e);
   }
 }, { once:true });

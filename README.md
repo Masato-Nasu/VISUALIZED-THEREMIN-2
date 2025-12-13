@@ -34,4 +34,4 @@
 
 ---
 License: MIT (or your preferred license)
-- v3.1.4: 起動画面をスキップして、ページを開いたら即 startAll()（見た目ロジックは変更なし）。
+- v3.1.5: Service Worker を無効化（古いキャッシュが出続ける問題を根本的に回避）。起動直後に実行画面へ。
