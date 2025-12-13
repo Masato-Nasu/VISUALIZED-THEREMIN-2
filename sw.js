@@ -1,5 +1,5 @@
-// sw.js v3.1.7
-const CACHE='VISUALIZED-THEREMIN-2-v3-1-7';
+// sw.js v3.1.8
+const CACHE='baby-theremin-animals-v3-1';
 const ASSETS=[
   './',
   './index.html?v=3.1.0',

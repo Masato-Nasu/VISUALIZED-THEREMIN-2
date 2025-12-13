@@ -25,57 +25,7 @@
   select{background:transparent;color:#E8EAF2;border:1px solid #222;padding:8px 10px;border-radius:10px}
   .visually-hidden{ position:absolute; left:-9999px; width:1px; height:1px; opacity:0; }
 
-  /* --- boot HUD (non-blocking) --- */
-  #bootHud{
-    position:fixed; inset:auto 12px 12px 12px;
-    display:flex; gap:10px; align-items:center; justify-content:space-between;
-    z-index:9999; pointer-events:none;
-    font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-    color: rgba(255,255,255,.82);
-    text-shadow: 0 2px 10px rgba(0,0,0,.35);
-  }
-  #bootHud .left{ display:flex; gap:10px; align-items:center; pointer-events:none; }
-  #bootHud .badge{
-    padding:6px 10px; border-radius:999px;
-    background: rgba(0,0,0,.35);
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(6px);
-  }
-  #bootHud .btn{
-    pointer-events:auto;
-    user-select:none;
-    cursor:pointer;
-    padding:6px 10px; border-radius:999px;
-    background: rgba(255,255,255,.88);
-    color: rgba(0,0,0,.82);
-    border: 1px solid rgba(255,255,255,.92);
-    box-shadow: 0 10px 24px rgba(0,0,0,.25);
-  }
-  #bootHud .btn:active{ transform: translateY(1px); }
-  #errBox{
-    position:fixed; inset:14px;
-    z-index:10000;
-    display:none;
-    background: rgba(0,0,0,.86);
-    color: rgba(255,255,255,.92);
-    border:1px solid rgba(255,255,255,.18);
-    border-radius: 14px;
-    padding: 14px;
-    overflow:auto;
-    font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  }
-  #errBox pre{ white-space: pre-wrap; word-break: break-word; }
-  #errBox .top{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin-bottom:10px; }
-  #errBox .xbtn{
-    pointer-events:auto;
-    user-select:none;
-    cursor:pointer;
-    padding:6px 10px; border-radius:999px;
-    background: rgba(255,255,255,.9);
-    color: rgba(0,0,0,.82);
-    border: 1px solid rgba(255,255,255,.92);
-  }
-
+#starter{display:none !important;}
 </style>
 </head>
 <body>
@@ -213,7 +163,7 @@
       }
       presetSel.value = mode;
       startPreset(mode);
-      reset();
+      if(typeof reset==='function'){ reset(); }
       hasStarted = true;
     }
   }
@@ -480,106 +430,14 @@
   });
 
 })();</script>
+
 <script>
-if("serviceWorker" in navigator){ /* SW disabled in v3.1.7 (avoid stale cache) */ }
-
-
-// --- boot patch v3.1.7 ---
-(function(){
-  const bootMsg = () => document.getElementById('bootMsg');
-  const setMsg = (s) => { const e=bootMsg(); if(e) e.textContent=s; };
-  const showErr = (err) => {
-    try {
-      const box=document.getElementById('errBox');
-      const txt=document.getElementById('errText');
-      if(txt) txt.textContent = String(err && (err.stack||err.message||err)) ;
-      if(box) box.style.display='block';
-    } catch(_e) {}
-  };
-  window.addEventListener('error', (e)=>{ showErr(e.error || e.message || e); });
-  window.addEventListener('unhandledrejection', (e)=>{ showErr(e.reason || e); });
-
-  // Hard reload: unregister SW + clear caches + cache-bust reload
-  async function hardReload(){
-    setMsg('clearing cache…');
-    try {
-      if('serviceWorker' in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r=>r.unregister()));
-      }
-    } catch(_e) {}
-    try {
-      if(window.caches) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map(k=>caches.delete(k)));
-      }
-    } catch(_e) {}
-    const u = new URL(location.href);
-    u.searchParams.set('v', String(Date.now()));
-    location.replace(u.toString());
-  }
-  window.__hardReload = hardReload;
-
-  window.addEventListener('load', ()=>{
-    const btn=document.getElementById('hardReload');
-    if(btn) btn.addEventListener('click', hardReload);
-    const x=document.getElementById('errClose');
-    if(x) x.addEventListener('click', ()=>{ const b=document.getElementById('errBox'); if(b) b.style.display='none'; });
-  }, {once:true});
-
-  // Autostart: hide starter overlay if it exists, but do NOT touch drawing logic.
-  window.addEventListener('load', ()=>{
-    try {
-      // try common ids
-      const starter = document.getElementById('starter') || document.getElementById('tapToStart') || document.getElementById('startOverlay');
-      if(starter) starter.style.display='none';
-
-      // Some builds use a start button
-      const startBtn = document.getElementById('startBtn') || document.querySelector('button#start, button.start, #starter button, #tapToStart button');
-      if(startBtn && typeof startBtn.click === 'function') {
-        setMsg('starting…');
-        startBtn.click();
-        setMsg('ready');
-        return;
-      }
-
-      if(typeof startAll === 'function') {
-        setMsg('starting…');
-        startAll(null);
-        setMsg('ready');
-        return;
-      }
-      if(typeof startApp === 'function') {
-        setMsg('starting…');
-        startApp();
-        setMsg('ready');
-        return;
-      }
-      setMsg('ready');
-    } catch(e) {
-      setMsg('error');
-      showErr(e);
-    }
-  }, {once:true});
-})();
-
+// autostart v3.1.8: skip starter, visuals unchanged. audio will resume on gesture if needed.
+window.addEventListener('load', ()=>{ try{ if(typeof startAll==='function') startAll(null); }catch(e){ console.warn(e); } }, {once:true});
 </script>
 
-  <div id="errBox" role="dialog" aria-label="Error">
-    <div class="top">
-      <div>⚠ エラー表示（v3.1.7）</div>
-      <div class="xbtn" id="errClose">閉じる</div>
-    </div>
-    <pre id="errText"></pre>
-  </div>
-
-  <div id="bootHud" aria-hidden="false">
-    <div class="left">
-      <div class="badge">v3.1.7</div>
-      <div class="badge" id="bootMsg">loading…</div>
-    </div>
-    <div class="btn" id="hardReload">↻ 強制更新</div>
-  </div>
-
+<script>
+if("serviceWorker" in navigator){ navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())); }
+</script>
 </body>
 </html>
