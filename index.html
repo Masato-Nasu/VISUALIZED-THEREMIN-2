@@ -75,7 +75,7 @@
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.3.9</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.4.1</div>
   </div>
 </div>
 
@@ -225,7 +225,7 @@
 
   function n2f(n){ return 440 * Math.pow(2, (n-69)/12); }
 
-  function playNote(n, durSec){
+  function playNote(n, durSec, vel=1.0){
     if(!actx) return;
     const t0 = actx.currentTime;
 
@@ -254,7 +254,7 @@
 
     const g = actx.createGain();
     g.gain.setValueAtTime(0.0, t0);
-    g.gain.linearRampToValueAtTime(0.95, t0+0.008);
+    g.gain.linearRampToValueAtTime(Math.min(1.0, 0.18 + 0.82*vel), t0+0.008);
     g.gain.exponentialRampToValueAtTime(0.0001, t0+Math.max(0.08, durSec*0.92));
 
     const hp = actx.createBiquadFilter();
@@ -273,7 +273,7 @@
         ns.buffer = window.__mbNoise;
         const ng = actx.createGain();
         ng.gain.setValueAtTime(0.0, t0);
-        ng.gain.linearRampToValueAtTime(0.35, t0+0.003);
+        ng.gain.linearRampToValueAtTime(0.16 + 0.30*vel, t0+0.003);
         ng.gain.exponentialRampToValueAtTime(0.0001, t0+0.03);
 
         const nhp = actx.createBiquadFilter();
@@ -293,40 +293,18 @@
 
   // ===== Songs =====
   const SONGS = {
-    star: { label:'きらきら星', icon:'☆', tempo:112, type:'star', color:'#facc15',
-      seq:[{n:60,d:1},{n:60,d:1},{n:67,d:1},{n:67,d:1},{n:69,d:1},{n:69,d:1},{n:67,d:2},
-           {n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:2},{n:null,d:1}] },
-    sheep: { label:'メリーさんの羊', icon:'🐑', tempo:116, type:'sheep', color:'#60a5fa',
-      seq:[{n:64,d:1},{n:62,d:1},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},
-           {n:62,d:1},{n:62,d:1},{n:62,d:2},{n:64,d:1},{n:67,d:1},{n:67,d:2},
-           {n:64,d:1},{n:62,d:1},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:1}] },
-    butterfly: { label:'ちょうちょう', icon:'🦋', tempo:120, type:'butterfly', color:'#a78bfa',
-      seq:[{n:67,d:1},{n:64,d:1},{n:64,d:2},{n:65,d:1},{n:62,d:1},{n:62,d:2},
-           {n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:67,d:1},{n:67,d:2},
-           {n:67,d:1},{n:69,d:1},{n:69,d:2},{n:67,d:1},{n:65,d:1},{n:65,d:2},
-           {n:64,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:2},{n:null,d:1}] },
-    bee: { label:'ぶんぶんぶん', icon:'🐝', tempo:110, type:'bee', color:'#34d399',
-      seq:[{n:67,d:1},{n:65,d:1},{n:64,d:2},
-           {n:62,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:60,d:2},
-           {n:64,d:1},{n:65,d:1},{n:67,d:1},{n:64,d:1},
-           {n:62,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},
-           {n:64,d:1},{n:65,d:1},{n:67,d:1},{n:64,d:1},
-           {n:62,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},
-           {n:67,d:1},{n:65,d:1},{n:64,d:2},
-           {n:62,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:60,d:2},{n:null,d:1}] },
-    frog: { label:'かえるの合唱', icon:'🐸', tempo:118, type:'frog', color:'#34d399',
-      seq:[{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:2},
-           {n:64,d:1},{n:65,d:1},{n:67,d:1},{n:69,d:1},{n:67,d:1},{n:65,d:1},{n:64,d:2},
-           {n:60,d:1},{n:60,d:1},{n:60,d:1},{n:60,d:1},
-           {n:60,d:0.5},{n:60,d:0.5},{n:62,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:65,d:0.5},
-           {n:64,d:1},{n:62,d:1},{n:60,d:2},{n:null,d:1}] },
-    bear: { label:'森のくまさん', icon:'🐻', tempo:104, type:'bear', color:'#f472b6',
-      seq:[{n:67,d:1},{n:66,d:1},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:63,d:1},{n:64,d:1},{n:60,d:1},
-           {n:64,d:1},{n:62,d:1},{n:60,d:1},{n:62,d:1},
-           {n:67,d:1},{n:69,d:1},{n:67,d:1},{n:64,d:1},
-           {n:67,d:1},{n:69,d:1},{n:71,d:1},{n:72,d:1},{n:67,d:1},{n:64,d:1},{n:60,d:1},{n:69,d:1},
-           {n:69,d:1},{n:71,d:1},{n:69,d:1},{n:67,d:1},{n:65,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:1},
-           {n:null,d:1}] },
+    star: { label:'きらきら星', icon:'☆', tempo:112, meter:4, baseVel:0.92, type:'star', color:'#facc15',
+      seq:[{n:60,d:1},{n:60,d:1},{n:67,d:1},{n:67,d:1},{n:69,d:1},{n:69,d:1},{n:67,d:2,v:1.10},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:2,v:1.10},{n:67,d:1},{n:67,d:1},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:2,v:1.05},{n:67,d:1},{n:67,d:1},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:2,v:1.05},{n:60,d:1},{n:60,d:1},{n:67,d:1},{n:67,d:1},{n:69,d:1},{n:69,d:1},{n:67,d:2,v:1.10},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:2,v:1.12},{n:null,d:1}] },
+    sheep: { label:'メリーさんの羊', icon:'🐑', tempo:116, meter:4, baseVel:0.92, type:'sheep', color:'#60a5fa',
+      seq:[{n:64,d:1},{n:62,d:1},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2,v:1.10},{n:62,d:1},{n:62,d:1},{n:62,d:2,v:1.05},{n:64,d:1},{n:67,d:1},{n:67,d:2,v:1.08},{n:64,d:1},{n:62,d:1},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:1},{n:62,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:4,v:1.12},{n:null,d:1}] },
+    bear: { label:'森のくまさん', icon:'🐻', tempo:112, meter:4, baseVel:0.90, type:'bear', color:'#34d399',
+      seq:[{n:60,d:1},{n:60,d:1},{n:64,d:1},{n:67,d:2,v:1.06},{n:67,d:1},{n:69,d:1},{n:67,d:1},{n:64,d:2,v:1.06},{n:60,d:1},{n:60,d:1},{n:64,d:1},{n:67,d:2,v:1.06},{n:67,d:1},{n:69,d:1},{n:67,d:1},{n:64,d:2,v:1.06},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:69,d:2,v:1.06},{n:67,d:1},{n:64,d:1},{n:60,d:1},{n:62,d:2,v:1.04},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:69,d:2,v:1.06},{n:67,d:1},{n:64,d:1},{n:60,d:2,v:1.12},{n:null,d:1}] },
+    butterfly: { label:'ちょうちょう', icon:'🦋', tempo:120, meter:4, baseVel:0.90, type:'butterfly', color:'#a78bfa',
+      seq:[{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:67,d:1},{n:67,d:2,v:1.08},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:60,d:1},{n:60,d:1},{n:60,d:2,v:1.10},{n:null,d:1}] },
+    bee: { label:'ぶんぶんぶん', icon:'🐝', tempo:124, meter:4, baseVel:0.90, type:'bee', color:'#f472b6',
+      seq:[{n:67,d:1},{n:67,d:1},{n:69,d:1},{n:67,d:1},{n:60,d:1},{n:71,d:2,v:1.08},{n:67,d:1},{n:67,d:1},{n:69,d:1},{n:67,d:1},{n:60,d:1},{n:71,d:2,v:1.08},{n:60,d:1},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:2,v:1.10},{n:null,d:1}] },
+    frog: { label:'かえるの合唱', icon:'🐸', tempo:118, meter:4, baseVel:0.90, type:'frog', color:'#60a5fa',
+      seq:[{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:2,v:1.08},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:69,d:1},{n:67,d:1},{n:65,d:1},{n:64,d:2,v:1.06},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:2,v:1.10},{n:null,d:1}] },
   };
   const SONG_KEYS = Object.keys(SONGS);
 
@@ -344,11 +322,31 @@
 
     const song = SONGS[k];
     const beatSec = 60 / song.tempo;
+    const meter = song.meter || 4;
+    const baseVel = (song.baseVel==null) ? 0.90 : song.baseVel;
+
+    let beatInBar = 0;
+
     (function tick(){
       if(!currentSong) return;
-      const item = song.seq[seqPos % song.seq.length];
-      const dur = (item.d||1) * beatSec;
-      if(item.n!=null) playNote(item.n, dur*0.98);
+
+      const idx = seqPos % song.seq.length;
+      if(idx===0){ beatInBar = 0; } // reset at loop boundary
+
+      const item = song.seq[idx];
+      const beats = (item.d||1);
+      const dur = beats * beatSec;
+
+      // Accent model: strong on downbeat, softer elsewhere; allow per-note override via item.v
+      const down = (beatInBar < 0.0001);
+      const velAuto = down ? 1.08 : 0.82;
+      const vel = Math.max(0.35, Math.min(1.20, baseVel * (item.v ?? velAuto)));
+
+      if(item.n!=null) playNote(item.n, dur*0.98, vel);
+
+      beatInBar += beats;
+      while(beatInBar >= meter) beatInBar -= meter;
+
       seqPos++;
       seqTimer = setTimeout(tick, Math.max(20, dur*1000));
     })();
