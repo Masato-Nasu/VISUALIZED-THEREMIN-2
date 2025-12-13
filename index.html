@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Songs & Shapes</title>
-<link rel="manifest" href="./manifest.json?v=3.2.7">
+<link rel="manifest" href="./manifest.json?v=3.2.8">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -63,7 +63,7 @@
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.2.7</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.2.8</div>
   </div>
 </div>
 
@@ -133,7 +133,7 @@
 
     master = actx.createGain(); master.gain.value = 0.90;
     melodyBus = actx.createGain(); melodyBus.gain.value = 0.60;
-    thBus = actx.createGain(); thBus.gain.value = 0.40;
+    thBus = actx.createGain(); thBus.gain.value = 0.28;
 
     melodyBus.connect(analyser);
     thBus.connect(analyser);
@@ -174,23 +174,30 @@
 // Theremin
     envGain = actx.createGain(); envGain.gain.value = 0.0;
     thFilter = actx.createBiquadFilter();
-    thFilter.type = 'lowpass'; thFilter.frequency.value = 1700; thFilter.Q.value = 0.7;
+    thFilter.type = 'lowpass'; thFilter.frequency.value = 1200; thFilter.Q.value = 0.45;
 
     oscA = actx.createOscillator(); oscA.type = 'sine';
     oscB = actx.createOscillator(); oscB.type = 'sine'; oscB.detune.value = +6;
 
     lfoTrem = actx.createOscillator(); lfoTrem.type = 'sine'; lfoTrem.frequency.value = 0.9;
-    lfoTremGain = actx.createGain(); lfoTremGain.gain.value = 0.08;
+    lfoTremGain = actx.createGain(); lfoTremGain.gain.value = 0.05;
 
     lfoVib = actx.createOscillator(); lfoVib.type = 'sine'; lfoVib.frequency.value = 5.5;
     lfoVibGain = actx.createGain(); lfoVibGain.gain.value = 7.0;
 
     oscA.connect(thFilter);
     oscB.connect(thFilter);
-    thFilter.connect(envGain);
-    envGain.connect(thBus);
+    // extra softener for baby-friendly theremin
+    const thSoftLP = actx.createBiquadFilter();
+    thSoftLP.type = 'lowpass';
+    thSoftLP.frequency.value = 1400;
+    thSoftLP.Q.value = 0.35;
 
-    lfoVib.connect(lfoVibGain);
+    thFilter.disconnect();
+    thFilter.connect(thSoftLP);
+    thSoftLP.connect(envGain);
+
+lfoVib.connect(lfoVibGain);
     lfoVibGain.connect(oscA.detune);
     lfoVibGain.connect(oscB.detune);
 
@@ -600,7 +607,7 @@
     }
     if(actx && thFilter){
       const t0 = actx.currentTime;
-      thFilter.frequency.setTargetAtTime(1400 + curve*1200, t0, 0.06);
+      thFilter.frequency.setTargetAtTime(1100 + curve*900, t0, 0.06);
     }
   }
 
@@ -609,14 +616,14 @@
     thereminOn = true;
     const t0 = actx.currentTime;
     envGain.gain.cancelScheduledValues(t0);
-    envGain.gain.setTargetAtTime(1.0, t0, 0.02);
+    envGain.gain.setTargetAtTime(1.0, t0, 0.06);
   }
   function stopTheremin(){
     if(!actx) return;
     thereminOn = false;
     const t0 = actx.currentTime;
     envGain.gain.cancelScheduledValues(t0);
-    envGain.gain.setTargetAtTime(0.0, t0, 0.10);
+    envGain.gain.setTargetAtTime(0.0, t0, 0.16);
   }
 
   function pluck(){
@@ -686,7 +693,7 @@
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.2.7"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.2.8"); }
 </script>
 </body>
 </html>
