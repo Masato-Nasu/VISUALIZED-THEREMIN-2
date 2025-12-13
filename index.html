@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-<title>Baby Theremin – Traced Ver.2</title>
-<link rel="manifest" href="./manifest.json?v=3.5.12">
+<title>Baby Theremin – Round Frog Ver.</title>
+<link rel="manifest" href="./manifest.json?v=3.5.13">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -66,8 +66,8 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.12) === */
-const APP_VERSION = "3.5.12";
+/* === Hard update guard (v3.5.13) === */
+const APP_VERSION = "3.5.13";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -99,7 +99,7 @@ const APP_VERSION = "3.5.12";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>羊とカエルを修正しました v3.5.12</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.13</div>
   </div>
 </div>
 
@@ -521,13 +521,14 @@ const APP_VERSION = "3.5.12";
     }
 
     if(type==='frog'){
-       // [修正] 輪郭を横に広くのっぺりさせ、目の突起を左右に離す
-       addPath(g, 'M -0.9 0.1 C -0.9 -0.5 -0.7 -0.5 -0.6 -0.5 C -0.6 -0.9 -0.2 -0.9 -0.2 -0.5 L 0.2 -0.5 C 0.2 -0.9 0.6 -0.9 0.6 -0.5 C 0.7 -0.5 0.9 -0.5 0.9 0.1 C 0.9 0.6 0.5 0.8 0 0.8 C -0.5 0.8 -0.9 0.6 -0.9 0.1', color);
-       // Eyes: Circles inside the bumps (separated)
-       addCircle(g, -0.4, -0.65, 0.05, color);
-       addCircle(g, 0.4, -0.65, 0.05, color);
-       // Mouth: Wide smile
-       addPath(g, 'M -0.4 0.2 Q 0 0.5 0.4 0.2', color);
+       // [再修正] もっと丸っこく、目は点
+       // 輪郭: 全体的に丸いフォルムに変更。目の突起はなだらかに。
+       addPath(g, 'M -0.8 0.1 C -0.8 -0.4 -0.6 -0.6 -0.4 -0.6 C -0.4 -0.8 -0.1 -0.8 -0.1 -0.6 L 0.1 -0.6 C 0.1 -0.8 0.4 -0.8 0.4 -0.6 C 0.6 -0.6 0.8 -0.4 0.8 0.1 C 0.8 0.6 0.5 0.9 0 0.9 C -0.5 0.9 -0.8 0.6 -0.8 0.1', color);
+       // 目: シンプルな点（小さな塗りつぶし円）
+       addCircle(g, -0.25, -0.6, 0.03, color);
+       addCircle(g, 0.25, -0.6, 0.03, color);
+       // 口: 位置を調整
+       addPath(g, 'M -0.3 0.3 Q 0 0.5 0.3 0.3', color);
        return g;
     }
 
@@ -725,7 +726,7 @@ const APP_VERSION = "3.5.12";
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.12"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.13"); }
 </script>
 </body>
 </html>
