@@ -1,6 +1,6 @@
-// sw.js v3.5.36
-const CACHE = 'VISUALIZED-THEREMIN-2-v3-5-36';
-const ASSETS = [
+// sw.js v3.5.37
+const CACHE = 'VISUALIZED-THEREMIN-2-v3-5-37';
+const CORE = [
   './',
   './index.html',
   './manifest.json',
@@ -12,7 +12,7 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
-    await cache.addAll(ASSETS.map(u => new Request(u, { cache: 'reload' })));
+    await cache.addAll(CORE);
     await self.skipWaiting();
   })());
 });
@@ -20,48 +20,48 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.map(k => (k === CACHE) ? null : caches.delete(k)));
+    await Promise.all(keys.map(k => (k !== CACHE) ? caches.delete(k) : Promise.resolve()));
     await self.clients.claim();
   })());
-});
-
-self.addEventListener('message', (event) => {
-  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== location.origin) return;
 
-  // Navigations: network-first, fallback to cached shell
+  // Bypass SW for the cleaner page
+  if (url.pathname.endsWith('/clean.html')) {
+    event.respondWith(fetch(req, { cache: 'no-store' }));
+    return;
+  }
+
+  // Navigation: network-first, fallback to cached app shell
   if (req.mode === 'navigate') {
     event.respondWith((async () => {
       try {
-        const fresh = await fetch(req);
+        const fresh = await fetch(req, { cache: 'no-store' });
         const cache = await caches.open(CACHE);
+        cache.put('./', fresh.clone());
         cache.put('./index.html', fresh.clone());
         return fresh;
-      } catch (_e) {
-        const cached = await caches.match('./index.html');
-        return cached || caches.match('./') || Response.error();
+      } catch (e) {
+        const cache = await caches.open(CACHE);
+        return (await cache.match('./')) || (await cache.match('./index.html')) || Response.error();
       }
     })());
     return;
   }
 
-  // Static: cache-first, fallback network
+  // Static: cache-first (ignore query), then network
   event.respondWith((async () => {
-    const cached = await caches.match(req, { ignoreSearch: true });
+    const cache = await caches.open(CACHE);
+    const cached = await cache.match(req, { ignoreSearch: true });
     if (cached) return cached;
-    try {
-      const fresh = await fetch(req);
-      const cache = await caches.open(CACHE);
-      cache.put(req, fresh.clone());
-      return fresh;
-    } catch (_e) {
-      return Response.error();
-    }
+
+    const resp = await fetch(req);
+    if (req.method === 'GET' && resp && resp.ok) cache.put(req, resp.clone());
+    return resp;
   })());
 });

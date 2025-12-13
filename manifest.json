@@ -1,7 +1,7 @@
 {
   "name": "Baby Theremin – Songs & Shapes",
   "short_name": "Theremin",
-  "start_url": "./?v=3.5.36",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
@@ -20,5 +20,5 @@
     }
   ],
   "scope": "./",
-  "id": "/VISUALIZED-THEREMIN-2/?id=3.5.36"
+  "id": "/VISUALIZED-THEREMIN-2/"
 }
