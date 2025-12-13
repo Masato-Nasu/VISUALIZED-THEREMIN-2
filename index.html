@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-<title>Baby Theremin – Cute Ver.2</title>
-<link rel="manifest" href="./manifest.json?v=3.5.6">
+<title>Baby Theremin – Cute Ver.</title>
+<link rel="manifest" href="./manifest.json?v=3.5.7">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -66,8 +66,8 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.6) === */
-const APP_VERSION = "3.5.6";
+/* === Hard update guard (v3.5.7) === */
+const APP_VERSION = "3.5.7";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -76,6 +76,10 @@ const APP_VERSION = "3.5.6";
       if (navigator.serviceWorker) {
         const regs = await navigator.serviceWorker.getRegistrations();
         await Promise.all(regs.map(r => r.unregister()));
+      }
+      if (window.caches && caches.keys) {
+        const keys = await caches.keys();
+        await Promise.all(keys.filter(k => k.startsWith("baby-theremin-pd")).map(k => caches.delete(k)));
       }
       location.replace("./index.html?v=" + APP_VERSION + "&hard=1");
       return;
@@ -91,11 +95,11 @@ const APP_VERSION = "3.5.6";
 <div id="starter" class="starter">
   <div class="card">
     <div class="big">Baby Theremin</div>
-    <div>クマとカエルを<br>もっとかわいくしました</div>
+    <div>「はじめる」を押すと、<br>曲と形がランダムで始まるよ</div>
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">曲は自動で切り替わります v3.5.6</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>クマとカエルをもっとゆるかわに v3.5.7</div>
   </div>
 </div>
 
@@ -109,8 +113,7 @@ const APP_VERSION = "3.5.6";
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
-  </defs>
-</svg>
+  </defs></svg>
 
 <div id="songBar" aria-label="曲をえらぶ">
   <button class="songBtn" data-song="star" aria-label="きらきら星">☆</button>
@@ -140,16 +143,18 @@ const APP_VERSION = "3.5.6";
   }
   fitStage();
   addEventListener('resize', fitStage, {passive:true});
+  addEventListener('orientationchange', fitStage, {passive:true});
   if(window.visualViewport) visualViewport.addEventListener('resize', fitStage, {passive:true});
 
   function ptFromEvent(e){
     const r = stage.getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width * W;
     const y = (e.clientY - r.top) / r.height * H;
-    return (Number.isFinite(x) && Number.isFinite(y)) ? {x,y} : null;
+    if(Number.isFinite(x) && Number.isFinite(y)) return {x,y};
+    return null;
   }
 
-  // ===== Audio Engine =====
+  // ===== Audio =====
   const AC = window.AudioContext || window.webkitAudioContext;
   let actx=null, analyser=null, master=null, melodyBus=null, thBus=null;
   let thFilter=null, envGain=null, oscA=null, oscB=null, lfoTrem=null, lfoTremGain=null, lfoVib=null, lfoVibGain=null;
@@ -161,179 +166,531 @@ const APP_VERSION = "3.5.6";
   function ensureAudio(){
     if(actx) return;
     actx = new AC();
-    analyser = actx.createAnalyser(); analyser.fftSize = 256;
+
+    analyser = actx.createAnalyser();
+    analyser.fftSize = 256;
+
     master = actx.createGain(); master.gain.value = 0.90;
     melodyBus = actx.createGain(); melodyBus.gain.value = 0.60;
     thBus = actx.createGain(); thBus.gain.value = 0.28;
-    melodyBus.connect(analyser); thBus.connect(analyser);
-    analyser.connect(master); master.connect(actx.destination);
 
-    // Theremin setup
+    melodyBus.connect(analyser);
+    thBus.connect(analyser);
+    analyser.connect(master);
+    master.connect(actx.destination);
+
+    // --- Music-box-ish ambience ---
+    const mbDelay = actx.createDelay(0.45);
+    mbDelay.delayTime.value = 0.18;
+    const mbWet = actx.createGain();
+    mbWet.gain.value = 0.34;
+    const mbFb = actx.createGain();
+    mbFb.gain.value = 0.18;
+    const mbFbLP = actx.createBiquadFilter();
+    mbFbLP.type = 'lowpass';
+    mbFbLP.frequency.value = 1800;
+
+    mbDelay.connect(mbFbLP);
+    mbFbLP.connect(mbFb);
+    mbFb.connect(mbDelay);
+
+    melodyBus.connect(mbDelay);
+    mbDelay.connect(mbWet);
+    mbWet.connect(analyser);
+
+    const noiseLen = Math.floor(actx.sampleRate * 0.03);
+    window.__mbNoise = actx.createBuffer(1, noiseLen, actx.sampleRate);
+    const ch = window.__mbNoise.getChannelData(0);
+    for(let i=0;i<noiseLen;i++){
+      const env = Math.pow(1 - i/noiseLen, 2.4);
+      ch[i] = (Math.random()*2-1) * env * 0.35;
+    }
+
+    // Theremin
     envGain = actx.createGain(); envGain.gain.value = 0.0;
-    thFilter = actx.createBiquadFilter(); thFilter.type = 'lowpass'; thFilter.frequency.value = 1200;
+
+    thFilter = actx.createBiquadFilter();
+    thFilter.type = 'lowpass'; thFilter.frequency.value = 1200; thFilter.Q.value = 0.45;
+
+    const thSoftLP = actx.createBiquadFilter();
+    thSoftLP.type = 'lowpass';
+    thSoftLP.frequency.value = 1400;
+    thSoftLP.Q.value = 0.35;
+
     oscA = actx.createOscillator(); oscA.type = 'sine';
     oscB = actx.createOscillator(); oscB.type = 'sine'; oscB.detune.value = +6;
+
     lfoTrem = actx.createOscillator(); lfoTrem.type = 'sine'; lfoTrem.frequency.value = 0.9;
     lfoTremGain = actx.createGain(); lfoTremGain.gain.value = 0.05;
+
     lfoVib = actx.createOscillator(); lfoVib.type = 'sine'; lfoVib.frequency.value = 5.5;
     lfoVibGain = actx.createGain(); lfoVibGain.gain.value = 7.0;
 
-    oscA.connect(thFilter); oscB.connect(thFilter);
-    thFilter.connect(envGain); envGain.connect(thBus);
-    lfoVib.connect(lfoVibGain); lfoVibGain.connect(oscA.detune); lfoVibGain.connect(oscB.detune);
-    lfoTrem.connect(lfoTremGain); lfoTremGain.connect(envGain.gain);
+    oscA.connect(thFilter);
+    oscB.connect(thFilter);
+    thFilter.connect(thSoftLP);
+    thSoftLP.connect(envGain);
+    envGain.connect(thBus);
+
+    lfoVib.connect(lfoVibGain);
+    lfoVibGain.connect(oscA.detune);
+    lfoVibGain.connect(oscB.detune);
+
+    lfoTrem.connect(lfoTremGain);
+    lfoTremGain.connect(envGain.gain);
+
     oscA.start(); oscB.start(); lfoTrem.start(); lfoVib.start();
   }
 
-  function resumeAudio(){ ensureAudio(); if(actx && actx.state !== 'running') actx.resume(); }
+  function resumeAudio(){
+    ensureAudio();
+    try{ if(actx && actx.state !== 'running') actx.resume(); }catch(_ ){}
+  }
+
   function n2f(n){ return 440 * Math.pow(2, (n-69)/12); }
 
   function playNote(n, durSec, vel=1.0){
     if(!actx) return;
     const t0 = actx.currentTime;
-    const o = actx.createOscillator(); o.type = 'sine'; o.frequency.value = n2f(n);
+
+    const o1 = actx.createOscillator();
+    const o2 = actx.createOscillator();
+    const o3 = actx.createOscillator();
+    o1.type = 'sine';
+    o2.type = 'sine';
+    o3.type = 'triangle';
+
+    o1.frequency.value = n2f(n);
+    o2.frequency.value = n2f(n-12);
+    o3.frequency.value = n2f(n);
+    o1.detune.value = 0;
+    o3.detune.value = 0;
+
+    const mix = actx.createGain();
+    mix.gain.value = 1.0;
+
+    const g2 = actx.createGain(); g2.gain.value = 0.20;
+    const g3 = actx.createGain(); g3.gain.value = 0.18;
+
+    o1.connect(mix);
+    o2.connect(g2).connect(mix);
+    o3.connect(g3).connect(mix);
+
     const g = actx.createGain();
-    g.gain.setValueAtTime(0, t0);
-    g.gain.linearRampToValueAtTime(0.2 * vel, t0+0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0+durSec);
-    o.connect(g).connect(melodyBus);
-    o.start(t0); o.stop(t0 + durSec + 0.1);
+    g.gain.setValueAtTime(0.0, t0);
+    g.gain.linearRampToValueAtTime(Math.min(1.0, 0.18 + 0.82*vel), t0+0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+Math.max(0.08, durSec*0.92));
+
+    const hp = actx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 140;
+
+    const lp = actx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 3200;
+
+    mix.connect(hp).connect(lp).connect(g).connect(melodyBus);
+
+    try{
+      if(window.__mbNoise){
+        const ns = actx.createBufferSource();
+        ns.buffer = window.__mbNoise;
+        const ng = actx.createGain();
+        ng.gain.setValueAtTime(0.0, t0);
+        ng.gain.linearRampToValueAtTime(0.16 + 0.30*vel, t0+0.003);
+        ng.gain.exponentialRampToValueAtTime(0.0001, t0+0.03);
+
+        const nhp = actx.createBiquadFilter();
+        nhp.type = 'highpass';
+        nhp.frequency.value = 900;
+
+        ns.connect(nhp).connect(ng).connect(melodyBus);
+        ns.start(t0);
+        ns.stop(t0+0.05);
+      }
+    }catch(_e){}
+
+    o1.start(t0); o2.start(t0); o3.start(t0);
+    const stopT = t0 + durSec + 0.04;
+    o1.stop(stopT); o2.stop(stopT); o3.stop(stopT);
   }
 
-  // ===== Songs Data =====
+  // ===== Songs =====
   const SONGS = {
-    star: { type:'star', color:'#facc15', tempo:112, icon:'☆', seq:[{n:60,d:1},{n:60,d:1},{n:67,d:1},{n:67,d:1},{n:69,d:1},{n:69,d:1},{n:67,d:2},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:2}] },
-    sheep: { type:'sheep', color:'#60a5fa', tempo:110, icon:'🐑', seq:[{n:64,d:1.5},{n:62,d:0.5},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:62,d:1},{n:62,d:1},{n:62,d:2},{n:64,d:1},{n:67,d:1},{n:67,d:2}] },
-    bear: { type:'bear', color:'#fb923c', tempo:96, icon:'🐻', seq:[{n:67,d:1},{n:69,d:0.5},{n:71,d:0.5},{n:72,d:1},{n:67,d:1},{n:64,d:1},{n:60,d:1},{n:69,d:2}] },
-    butterfly: { type:'butterfly', color:'#a78bfa', tempo:112, icon:'🦋', seq:[{n:67,d:1},{n:64,d:1},{n:64,d:2},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:67,d:1},{n:67,d:2}] },
-    bee: { type:'bee', color:'#f472b6', tempo:126, icon:'🐝', seq:[{n:67,d:1},{n:65,d:1},{n:64,d:2},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:60,d:2}] },
-    frog: { type:'frog', color:'#4ade80', tempo:112, icon:'🐸', seq:[{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:2}] }
+    star: { label:'きらきら星', icon:'☆', tempo:112, meter:4, baseVel:0.92, type:'star', color:'#facc15',
+      seq:[{n:60,d:1},{n:60,d:1},{n:67,d:1},{n:67,d:1},{n:69,d:1},{n:69,d:1},{n:67,d:2},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:2},{n:67,d:1},{n:67,d:1},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:2},{n:67,d:1},{n:67,d:1},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:2},{n:60,d:1},{n:60,d:1},{n:67,d:1},{n:67,d:1},{n:69,d:1},{n:69,d:1},{n:67,d:2},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:2},{n:null,d:1}] },
+    sheep: { label:'メリーさんの羊', icon:'🐑', tempo:110, meter:4, baseVel:0.92, type:'sheep', color:'#60a5fa',
+      seq:[{n:64,d:1.5},{n:62,d:0.5},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:null,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:null,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:null,d:1},{n:64,d:1.5},{n:62,d:0.5},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:null,d:1},{n:62,d:1},{n:64,d:1},{n:62,d:1.5},{n:62,d:0.5},{n:60,d:4},{n:null,d:1}] },
+    bear: { label:'森のくまさん', icon:'🐻', tempo: 96, meter:4, baseVel:0.90, type:'bear', color:'#34d399',
+      seq:[{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:72,d:1},{n:67,d:1},{n:64,d:1},{n:60,d:1},{n:69,d:2},{n:null,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:69,d:0.5},{n:67,d:1},{n:68,d:1},{n:69,d:1},{n:71,d:1},{n:72,d:2},{n:null,d:0.5},{n:67,d:0.5},{n:66,d:0.5},{n:67,d:0.5},{n:64,d:1},{n:null,d:1},{n:null,d:0.5},{n:64,d:0.5},{n:63,d:0.5},{n:64,d:0.5},{n:60,d:1},{n:null,d:1},{n:null,d:0.5},{n:64,d:0.5},{n:62,d:0.5},{n:60,d:0.5},{n:62,d:1},{n:null,d:1},{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:67,d:0.5},{n:64,d:1},{n:null,d:1},{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:72,d:1},{n:67,d:1},{n:64,d:1},{n:60,d:1},{n:69,d:2},{n:null,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:69,d:0.5},{n:67,d:1},{n:65,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:4},{n:null,d:1}] },
+    butterfly: { label:'ちょうちょう', icon:'🦋', tempo:112, meter:4, baseVel:0.90, type:'butterfly', color:'#a78bfa',
+      seq:[{n:67,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:67,d:1},{n:67,d:2},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:2},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:2},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:1}] },
+    bee: { label:'ぶんぶんぶん', icon:'🐝', tempo:126, meter:4, baseVel:0.90, type:'bee', color:'#f472b6',
+      seq:[{n:67,d:1},{n:65,d:1},{n:64,d:1},{n:null,d:1},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:60,d:1},{n:null,d:1},{n:64,d:0.5},{n:65,d:0.5},{n:67,d:0.5},{n:64,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:67,d:0.5},{n:64,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:67,d:1},{n:65,d:1},{n:64,d:1},{n:null,d:1},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:60,d:1},{n:null,d:1},{n:null,d:1}] },
+    frog: { label:'かえるの合唱', icon:'🐸', tempo:112, meter:4, baseVel:0.90, type:'frog', color:'#60a5fa',
+      seq:[{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:2},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:69,d:1},{n:67,d:1},{n:65,d:1},{n:64,d:2},{n:60,d:1},{n:null,d:1},{n:60,d:1},{n:null,d:1},{n:60,d:1},{n:null,d:1},{n:60,d:1},{n:null,d:1},{n:60,d:0.5},{n:60,d:0.5},{n:62,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:65,d:0.5},{n:64,d:1},{n:62,d:1},{n:60,d:2},{n:null,d:1}] },
   };
   const SONG_KEYS = Object.keys(SONGS);
 
+  function stopSong(){ if(seqTimer){ clearTimeout(seqTimer); seqTimer=null; } seqPos=0; }
+  function setActiveButton(k){ songButtons.forEach(b=>b.classList.toggle('active', b.dataset.song===k)); }
+  function updateEmoji(){ const ic = SONGS[currentSong]?.icon || '☆'; emojiFallback.textContent = ic; emojiFallback.classList.add('show'); }
+
   function startSong(k){
-    resumeAudio(); if(seqTimer) clearTimeout(seqTimer);
-    currentSong = k; seqPos = 0;
-    const song = SONGS[k];
-    songButtons.forEach(b=>b.classList.toggle('active', b.dataset.song===k));
-    emojiFallback.textContent = song.icon; emojiFallback.classList.add('show');
+    resumeAudio();
+    stopSong();
+    currentSong = k;
+    setActiveButton(k);
+    updateEmoji();
     resetShapes();
+
+    const song = SONGS[k];
+    const beatSec = 60 / song.tempo;
+    const meter = song.meter || 4;
+    const baseVel = (song.baseVel==null) ? 0.90 : song.baseVel;
+
+    let beatInBar = 0;
 
     (function tick(){
       if(!currentSong) return;
+
       if(seqPos >= song.seq.length){
-        seqTimer = setTimeout(()=> startSong(SONG_KEYS[(Math.random()*SONG_KEYS.length)|0]), 2000);
+        // Change song automatically
+        seqTimer = setTimeout(()=>{
+          randomStart();
+        }, beatSec * 2000);
         return;
       }
+
       const item = song.seq[seqPos];
-      const beatSec = 60 / song.tempo;
-      if(item.n) playNote(item.n, item.d*beatSec);
+      const beats = (item.d||1);
+      const dur = beats * beatSec;
+
+      const velAuto = 1.0;
+      const vel = Math.max(0.35, Math.min(1.20, baseVel * (item.v ?? velAuto)));
+
+      if(item.n!=null) playNote(item.n, dur*0.98, vel);
+
+      beatInBar += beats;
+      while(beatInBar >= meter) beatInBar -= meter;
+
       seqPos++;
-      seqTimer = setTimeout(tick, item.d*beatSec*1000);
+      seqTimer = setTimeout(tick, Math.max(20, dur*1000));
     })();
   }
+  function randomStart(){ startSong(SONG_KEYS[(Math.random()*SONG_KEYS.length)|0]); }
 
-  // ===== SVG Drawing =====
+  // ===== SVG neon (Kawaii Style) =====
   const SHAPE_COUNT = 9;
+  const LINE_BASE = 9; 
+  const BEAT_AMT = 0.14;
   let shapes = [];
-  let t = 0;
+  let t=0;
+  window.visualPitchNorm = window.visualPitchNorm ?? 0.5;
 
-  function neonStroke(elem, color){
-    const common = { 'fill':'none', 'stroke-linecap':'round', 'stroke-linejoin':'round', 'vector-effect':'non-scaling-stroke' };
-    const g1 = elem.cloneNode(false); Object.assign(g1.style, common); 
-    g1.setAttribute('stroke', color); g1.setAttribute('stroke-width', '22'); g1.setAttribute('opacity', '0.15'); g1.setAttribute('filter', 'url(#glow)');
-    const g2 = elem.cloneNode(false); Object.assign(g2.style, common);
-    g2.setAttribute('stroke', color); g2.setAttribute('stroke-width', '12'); g2.setAttribute('opacity', '0.8');
-    const g3 = elem.cloneNode(false); Object.assign(g3.style, common);
-    g3.setAttribute('stroke', '#fff'); g3.setAttribute('stroke-width', '5');
-    return [g1, g2, g3];
+  function el(name){ return document.createElementNS('http://www.w3.org/2000/svg', name); }
+
+  function neonStroke(elem, color, wGlow, wMid, wCore){
+    const g1 = elem.cloneNode(false);
+    g1.setAttribute('stroke', color);
+    g1.setAttribute('stroke-width', String(wGlow));
+    g1.setAttribute('opacity','0.18');
+    g1.setAttribute('fill','none');
+    g1.setAttribute('stroke-linecap','round');
+    g1.setAttribute('stroke-linejoin','round');
+    g1.setAttribute('vector-effect','non-scaling-stroke');
+    g1.setAttribute('filter','url(#glow)');
+
+    const g2 = elem.cloneNode(false);
+    g2.setAttribute('stroke', color);
+    g2.setAttribute('stroke-width', String(wMid));
+    g2.setAttribute('opacity','0.85');
+    g2.setAttribute('fill','none');
+    g2.setAttribute('stroke-linecap','round');
+    g2.setAttribute('stroke-linejoin','round');
+    g2.setAttribute('vector-effect','non-scaling-stroke');
+
+    const g3 = elem.cloneNode(false);
+    g3.setAttribute('stroke', '#ffffff');
+    g3.setAttribute('stroke-width', String(wCore));
+    g3.setAttribute('opacity','0.95');
+    g3.setAttribute('fill','none');
+    g3.setAttribute('stroke-linecap','round');
+    g3.setAttribute('stroke-linejoin','round');
+    g3.setAttribute('vector-effect','non-scaling-stroke');
+
+    return [g1,g2,g3];
   }
 
   function addPath(g, d, color){
-    const p = el('path'); p.setAttribute('d', d);
-    neonStroke(p, color).forEach(n => g.appendChild(n));
+    const p = el('path');
+    p.setAttribute('d', d);
+    const [a,b,c] = neonStroke(p, color, LINE_BASE*2.4, LINE_BASE*1.5, Math.max(1, LINE_BASE*0.65));
+    g.appendChild(a); g.appendChild(b); g.appendChild(c);
   }
 
+  // === KAWAII PATHS (Retrying Bear and Frog for extra cuteness) ===
   function makeCuteAnimal(type, color){
     const g = el('g');
+
     if(type==='star'){
-      addPath(g, 'M 0 -0.9 Q 0.2 -0.3 0.9 -0.2 Q 0.4 0.2 0.6 0.8 Q 0 0.5 -0.6 0.8 Q -0.4 0.2 -0.9 -0.2 Q -0.2 -0.3 0 -0.9 Z', color);
-    } else if(type==='bear'){
-      // Improved Cute Bear
-      addPath(g, 'M -0.9 0.1 Q -0.9 -0.7 0 -0.7 Q 0.9 -0.7 0.9 0.1 Q 0.9 0.8 0 0.8 Q -0.9 0.8 -0.9 0.1 Z', color); // Face
-      addPath(g, 'M -0.55 -0.6 Q -0.8 -0.9 -0.4 -1.0', color); // L Ear
-      addPath(g, 'M 0.55 -0.6 Q 0.8 -0.9 0.4 -1.0', color);  // R Ear
-      addPath(g, 'M -0.4 -0.1 L -0.4 -0.1', color); // Eye
-      addPath(g, 'M 0.4 -0.1 L 0.4 -0.1', color);  // Eye
-      addPath(g, 'M -0.1 0.2 Q 0 0.3 0.1 0.2', color); // Nose/Mouth
-    } else if(type==='frog'){
-      // Improved Cute Frog
-      addPath(g, 'M -0.9 0.2 Q -0.9 0.8 0 0.8 Q 0.9 0.8 0.9 0.2 Q 0.9 -0.4 0 -0.4 Q -0.9 -0.4 -0.9 0.2', color); // Face
-      addPath(g, 'M -0.6 -0.3 Q -0.7 -0.8 -0.3 -0.8 Q 0.1 -0.8 0 -0.3', color); // L Eye Bump
-      addPath(g, 'M 0.6 -0.3 Q 0.7 -0.8 0.3 -0.8 Q -0.1 -0.8 0 -0.3', color); // R Eye Bump
-      addPath(g, 'M -0.45 -0.5 L -0.45 -0.5', color); // Eye dot
-      addPath(g, 'M 0.45 -0.5 L 0.45 -0.5', color);  // Eye dot
-      addPath(g, 'M -0.4 0.2 Q 0 0.5 0.4 0.2', color); // Smile
-    } else if(type==='sheep'){
-      addPath(g, 'M -0.5 0.6 Q -0.9 0.6 -0.9 0.1 Q -1.0 -0.4 -0.4 -0.5 Q -0.1 -0.9 0.3 -0.6 Q 0.8 -0.6 0.9 0.1 Q 0.9 0.6 0.5 0.6', color);
-      addPath(g, 'M 0.5 0.1 A 0.2 0.2 0 1 1 0.5 -0.3', color);
-    } else if(type==='butterfly'){
-      addPath(g, 'M 0 0 Q -0.9 -0.7 -0.8 0.3 Q -0.7 0.8 0 0.1 Q 0.7 0.8 0.8 0.3 Q 0.9 -0.7 0 0', color);
-      addPath(g, 'M 0 -0.3 L 0 0.4 M -0.2 -0.5 Q 0 -0.2 0.2 -0.5', color);
-    } else if(type==='bee'){
-      addPath(g, 'M -0.7 0 Q -0.7 -0.6 0 -0.6 Q 0.7 -0.6 0.7 0 Q 0.7 0.6 0 0.6 Q -0.7 0.6 -0.7 0 Z', color);
-      addPath(g, 'M -0.2 -0.6 V 0.6 M 0.2 -0.6 V 0.6 M 0 -0.6 Q 0 -1.1 0.4 -1.1', color);
+      // Rounded chubby star
+      addPath(g, 'M 0 -0.95 Q 0.2 -0.4 0.9 -0.3 Q 0.4 0.1 0.6 0.85 Q 0 0.5 -0.6 0.85 Q -0.4 0.1 -0.9 -0.3 Q -0.2 -0.4 0 -0.95 Z', color);
+      addPath(g, 'M -0.25 -0.05 L -0.25 -0.05', color); 
+      addPath(g, 'M 0.25 -0.05 L 0.25 -0.05', color);
+      return g;
     }
+
+    if(type==='bear'){
+      // [再修正] 手描きのような「いびつな丸（下ぶくれ）」+「ちょこんとついた耳」
+      // Head: wide bottom, narrower top, not perfect circle
+      addPath(g, 'M -0.85 0.1 C -0.9 -0.6 -0.6 -0.9 0 -0.9 C 0.6 -0.9 0.9 -0.6 0.85 0.1 C 0.8 0.7 0.5 0.95 0 0.95 C -0.5 0.95 -0.8 0.7 -0.85 0.1', color);
+      // Ears: Round and slightly floppy
+      addPath(g, 'M -0.65 -0.75 C -0.9 -0.8 -1.1 -0.6 -1.0 -0.3', color);
+      addPath(g, 'M 0.65 -0.75 C 0.9 -0.8 1.1 -0.6 1.0 -0.3', color);
+      // Face: Centered low, small eyes, small nose
+      addPath(g, 'M -0.2 -0.05 L -0.2 -0.05', color);
+      addPath(g, 'M 0.2 -0.05 L 0.2 -0.05', color);
+      addPath(g, 'M 0 0.2 L 0 0.2', color);
+      return g;
+    }
+
+    if(type==='sheep'){
+      addPath(g, 'M -0.5 0.6 Q -0.8 0.6 -0.9 0.3 Q -1.1 0 -0.9 -0.3 Q -0.7 -0.7 -0.3 -0.7 Q 0 -0.9 0.3 -0.7 Q 0.7 -0.7 0.9 -0.3 Q 1.1 0 0.9 0.3 Q 0.8 0.6 0.5 0.6', color);
+      addPath(g, 'M 0.5 0.1 A 0.3 0.3 0 1 1 0.5 -0.4', color);
+      addPath(g, 'M 0.6 -0.2 L 0.6 -0.2', color);
+      addPath(g, 'M -0.4 0.6 L -0.4 0.9', color);
+      addPath(g, 'M -0.1 0.6 L -0.1 0.9', color);
+      addPath(g, 'M 0.2 0.6 L 0.2 0.9', color);
+      return g;
+    }
+
+    if(type==='butterfly'){
+      addPath(g, 'M -0.1 -0.4 Q -0.8 -0.9 -0.9 -0.3 Q -1.0 0.1 -0.1 0.1 Q -0.8 0.4 -0.6 0.9 Q -0.1 1.0 -0.1 0.4', color); 
+      addPath(g, 'M 0.1 -0.4 Q 0.8 -0.9 0.9 -0.3 Q 1.0 0.1 0.1 0.1 Q 0.8 0.4 0.6 0.9 Q 0.1 1.0 0.1 0.4', color);
+      addPath(g, 'M 0 -0.5 L 0 0.5', color);
+      addPath(g, 'M -0.3 -0.8 Q 0 -0.5 0.3 -0.8', color);
+      return g;
+    }
+
+    if(type==='bee'){
+      addPath(g, 'M -0.7 0 Q -0.7 -0.6 0 -0.6 Q 0.7 -0.6 0.7 0 Q 0.7 0.6 0 0.6 Q -0.7 0.6 -0.7 0 Z', color);
+      addPath(g, 'M -0.2 -0.55 Q -0.1 0 -0.2 0.55', color);
+      addPath(g, 'M 0.2 -0.55 Q 0.3 0 0.2 0.55', color);
+      addPath(g, 'M -0.2 -0.5 Q -0.5 -1.0 0 -1.0 Q 0.5 -1.0 0.2 -0.5', color);
+      addPath(g, 'M 0.7 0 L 0.9 0', color);
+      addPath(g, 'M -0.45 -0.1 L -0.45 -0.1', color);
+      addPath(g, 'M -0.45 0.2 Q -0.35 0.3 -0.25 0.2', color);
+      return g;
+    }
+
+    if(type==='frog'){
+       // [再修正] 手描き通り「目の出っ張りと顔の輪郭を一体化」させる
+       // Outline: Wide jaw, eyes popping out from the top silhouette smoothly
+       addPath(g, 'M -0.9 0.1 C -0.9 -0.3 -0.7 -0.5 -0.6 -0.6 C -0.7 -0.9 -0.4 -1.1 -0.2 -0.9 C 0 -0.8 0 -0.8 0.2 -0.9 C 0.4 -1.1 0.7 -0.9 0.6 -0.6 C 0.7 -0.5 0.9 -0.3 0.9 0.1 C 0.9 0.6 0.5 0.9 0 0.9 C -0.5 0.9 -0.9 0.6 -0.9 0.1', color);
+       // Eyes: Simple dots inside the bumps
+       addPath(g, 'M -0.45 -0.6 L -0.45 -0.6', color);
+       addPath(g, 'M 0.45 -0.6 L 0.45 -0.6', color);
+       // Mouth: Wide and loose
+       addPath(g, 'M -0.3 0.3 Q 0 0.5 0.3 0.3', color);
+       return g;
+    }
+
+    // fallback
+    addPath(g, 'M 0 -0.8 L 0.2 -0.2 L 0.8 -0.2 L 0.3 0.2 L 0.5 0.8 L 0 0.4 L -0.5 0.8 L -0.3 0.2 L -0.8 -0.2 L -0.2 -0.2 Z', color);
     return g;
   }
+  // ==================================================
 
-  function el(n){ return document.createElementNS('http://www.w3.org/2000/svg', n); }
-  function resetShapes(){
-    shapes.forEach(s => stage.removeChild(s.g)); shapes = [];
-    const s = SONGS[currentSong];
-    for(let i=0; i<SHAPE_COUNT; i++){
-      const g = makeCuteAnimal(s.type, s.color); stage.appendChild(g);
-      shapes.push({ g, x:Math.random()*W, y:Math.random()*H, r:45, vx:(Math.random()-0.5)*2, vy:(Math.random()-0.5)*2, rot:Math.random()*360 });
+  function clearStageButDefs(){
+    const kids = Array.from(stage.childNodes);
+    for(const k of kids){
+      if(k.nodeType===1 && k.nodeName.toLowerCase()==='defs') continue;
+      stage.removeChild(k);
     }
+  }
+
+  function resetShapes(){
+    shapes.length = 0;
+    clearStageButDefs();
+
+    const song = SONGS[currentSong] || SONGS.star;
+    const type = song.type || 'star';
+    const color = song.color || '#60a5fa';
+
+    for(let i=0;i<SHAPE_COUNT;i++){
+      const r = 34*(0.80+Math.random()*0.80); // base size
+      const x = Math.random()*W;
+      const y = Math.random()*H;
+      const rot = Math.random()*Math.PI*2;
+      const vx = (Math.random()-0.5)*0.55;
+      const vy = (Math.random()-0.5)*0.55;
+
+      const g = makeCuteAnimal(type, color);
+      stage.appendChild(g);
+      shapes.push({type,color,x,y,r,rot,vx,vy,pulse:0,g});
+    }
+    emojiFallback.classList.remove('show');
+  }
+
+  function burstAt(px,py){
+    for(const s of shapes){
+      const ang = Math.atan2(s.y-py, s.x-px);
+      const f = 4.0 + Math.random()*2.6;
+      s.vx += Math.cos(ang)*f;
+      s.vy += Math.sin(ang)*f;
+      s.pulse = Math.min(1.3, s.pulse+1.0);
+    }
+  }
+
+  function getBeatScale(){
+    if(!analyser) return 1.0;
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+    let sum = 0;
+    for(let i=0;i<10;i++) sum += data[i] || 0;
+    const beatVal = (sum/10) / 255;
+    return 1.0 + beatVal * BEAT_AMT;
   }
 
   function drawLoop(){
-    t++; const pitchScale = 0.5 + (window.visualPitchNorm || 0.5) * 1.5;
-    shapes.forEach(s => {
-      s.x += s.vx; s.y += s.vy; s.rot += 0.5;
-      if(s.x<0 || s.x>W) s.vx *= -1; if(s.y<0 || s.y>H) s.vy *= -1;
-      const scale = s.r * pitchScale * (1 + 0.05*Math.sin(t*0.05));
-      s.g.setAttribute('transform', `translate(${s.x},${s.y}) rotate(${s.rot}) scale(${scale/40})`);
-    });
+    const beatScale = getBeatScale();
+    const pnTarget = Math.min(1, Math.max(0, window.visualPitchNorm ?? 0.5));
+    window.__pnSmooth = (window.__pnSmooth==null) ? pnTarget : (window.__pnSmooth + (pnTarget - window.__pnSmooth)*0.12);
+    const pn = window.__pnSmooth;
+    const pitchScale = 0.25 + pn*1.75;
+
+    for(const s of shapes){
+      s.x += s.vx; s.y += s.vy; s.rot += 0.006;
+      const rr = s.r;
+      if(s.x<rr){ s.x=rr; s.vx=Math.abs(s.vx); }
+      if(s.x>W-rr){ s.x=W-rr; s.vx=-Math.abs(s.vx); }
+      if(s.y<rr){ s.y=rr; s.vy=Math.abs(s.vy); }
+      if(s.y>H-rr){ s.y=H-rr; s.vy=-Math.abs(s.vy); }
+      s.vx *= 0.992; s.vy *= 0.992;
+
+      const base = 1 + 0.06*Math.sin(t*0.03 + s.x*0.003) + s.pulse*0.22;
+      const size = s.r * base * beatScale * pitchScale;
+      s.pulse *= 0.92;
+
+      const tx = s.x, ty = s.y;
+      const rotDeg = (s.rot * 180/Math.PI).toFixed(2);
+      s.g.setAttribute('transform', `translate(${tx.toFixed(2)},${ty.toFixed(2)}) rotate(${rotDeg}) scale(${size.toFixed(3)})`);
+    }
+    t++;
     requestAnimationFrame(drawLoop);
   }
 
   // ===== Interaction =====
-  let dragging=false;
-  stage.addEventListener('pointerdown', (e)=>{
-    resumeAudio(); dragging=true; updateTheremin(e);
-    const t0 = actx.currentTime; envGain.gain.setTargetAtTime(1.0, t0, 0.05);
-  });
-  window.addEventListener('pointermove', (e)=>{ if(dragging) updateTheremin(e); });
-  window.addEventListener('pointerup', ()=>{
-    dragging=false; if(actx) envGain.gain.setTargetAtTime(0, actx.currentTime, 0.1);
-    try{ chime.currentTime=0; chime.play(); }catch(e){}
-  });
+  let dragging=false, thereminOn=false, holdId=null, lastPos=null;
+  window.pitchHz = 440;
 
-  function updateTheremin(e){
-    const p = ptFromEvent(e); if(!p) return;
-    const n = Math.min(1, Math.max(0, 1 - p.y/H));
+  function setPitchFromY(y){
+    const pmin=130, pmax=820;
+    const n = Math.min(1, Math.max(0, 1 - (y / H)));
+    window.pitchHz = pmin * Math.pow(pmax/pmin, n);
     window.visualPitchNorm = n;
-    if(oscA){
-      const freq = 130 * Math.pow(820/130, n);
-      oscA.frequency.setTargetAtTime(freq, actx.currentTime, 0.02);
-      oscB.frequency.setTargetAtTime(freq, actx.currentTime, 0.02);
+
+    if(actx && oscA && oscB){
+      const t0 = actx.currentTime;
+      oscA.frequency.setTargetAtTime(window.pitchHz, t0, 0.02);
+      oscB.frequency.setTargetAtTime(window.pitchHz, t0, 0.02);
+    }
+    if(actx && thFilter){
+      const t0 = actx.currentTime;
+      thFilter.frequency.setTargetAtTime(900 + n*1100, t0, 0.06);
     }
   }
 
-  startbtn.addEventListener('click', ()=>{ starter.remove(); startSong('star'); requestAnimationFrame(drawLoop); });
-  songButtons.forEach(b => b.addEventListener('click', ()=> startSong(b.dataset.song)));
+  function startTheremin(){
+    if(!actx) return;
+    thereminOn = true;
+    const t0 = actx.currentTime;
+    envGain.gain.cancelScheduledValues(t0);
+    envGain.gain.setTargetAtTime(1.0, t0, 0.06);
+  }
+  function stopTheremin(){
+    if(!actx) return;
+    thereminOn = false;
+    const t0 = actx.currentTime;
+    envGain.gain.cancelScheduledValues(t0);
+    envGain.gain.setTargetAtTime(0.0, t0, 0.16);
+  }
+
+  function pluck(){
+    if(!actx) return;
+    const now = actx.currentTime;
+    const o = actx.createOscillator();
+    const g = actx.createGain();
+    const lp = actx.createBiquadFilter();
+    o.type = 'triangle';
+    lp.type = 'lowpass'; lp.frequency.value = 2400;
+    o.frequency.value = window.pitchHz || 440;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.9, now+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now+0.28);
+    o.connect(lp).connect(g).connect(master);
+    o.start(now);
+    o.stop(now+0.4);
+  }
+
+  stage.addEventListener('pointerdown', (e)=>{
+    resumeAudio();
+    dragging=true;
+    lastPos = ptFromEvent(e);
+    if(lastPos) setPitchFromY(lastPos.y); 
+    if(holdId) clearTimeout(holdId);
+    holdId = setTimeout(()=>{
+      if(lastPos) setPitchFromY(lastPos.y);
+      startTheremin();
+    }, 220);
+  }, {passive:false});
+
+  stage.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    const p = ptFromEvent(e);
+    if(p){
+      lastPos = p;
+      setPitchFromY(p.y); 
+    }
+  }, {passive:false});
+
+  window.addEventListener('pointerup', (e)=>{
+    if(!dragging) return;
+    dragging=false;
+    if(holdId){ clearTimeout(holdId); holdId=null; }
+    if(thereminOn){ stopTheremin(); }
+    else {
+      pluck();
+      try{ chime.currentTime=0; chime.play(); }catch(_ ){}
+      const p = ptFromEvent(e) || lastPos;
+      if(p) burstAt(p.x,p.y);
+    }
+  }, {passive:false});
+
+  let started=false;
+  function startApp(){
+    if(started) return;
+    started=true;
+    if(starter && starter.parentNode) starter.parentNode.removeChild(starter);
+    randomStart();
+    resetShapes();
+    requestAnimationFrame(drawLoop);
+  }
+
+  startbtn.addEventListener('click', (e)=>{ e.stopPropagation(); startApp(); });
+  songButtons.forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      if(!started) startApp();
+      startSong(btn.dataset.song);
+      resetShapes();
+    });
+  });
 })();
+</script>
+<script>
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.7"); }
 </script>
 </body>
 </html>
