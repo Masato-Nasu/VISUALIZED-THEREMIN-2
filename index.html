@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-<title>Baby Theremin – Traced Ver.</title>
-<link rel="manifest" href="./manifest.json?v=3.5.11">
+<title>Baby Theremin – Traced Ver.2</title>
+<link rel="manifest" href="./manifest.json?v=3.5.12">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -66,8 +66,8 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.11) === */
-const APP_VERSION = "3.5.11";
+/* === Hard update guard (v3.5.12) === */
+const APP_VERSION = "3.5.12";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -99,7 +99,7 @@ const APP_VERSION = "3.5.11";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>絵の形を忠実に修正しました v3.5.11</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>羊とカエルを修正しました v3.5.12</div>
   </div>
 </div>
 
@@ -450,16 +450,18 @@ const APP_VERSION = "3.5.11";
     }
 
     if(type==='sheep'){
-      // Body: Cloud shape, flat bottom, 3 legs drawn
-      addPath(g, 'M -0.5 0.5 Q -0.7 0.5 -0.85 0.3 Q -1.0 0.1 -0.9 -0.2 Q -0.8 -0.5 -0.4 -0.6 Q -0.1 -0.75 0.3 -0.65 Q 0.7 -0.5 0.9 -0.1 Q 1.0 0.2 0.8 0.5 Q 0.6 0.6 0.3 0.55 L -0.5 0.5', color);
-      // Face: U-shape on the left
-      addPath(g, 'M -0.8 -0.1 C -1.0 -0.1 -1.1 0.1 -1.0 0.3', color);
-      // Eye & Mouth
-      addPath(g, 'M -0.9 0.1 L -0.9 0.1', color);
-      // Legs: 3 simple lines
+      // [修正] 体（雲）の左端から「Uの字の顔」が突き出ている構造を再現
+      // Body: Cloud shape, flat bottom
+      addPath(g, 'M -0.5 0.5 Q -0.85 0.5 -0.85 0.2 Q -0.9 -0.2 -0.6 -0.5 Q -0.3 -0.7 0.0 -0.6 Q 0.4 -0.7 0.7 -0.5 Q 1.0 -0.3 0.9 0.1 Q 0.9 0.5 0.5 0.55 L -0.5 0.5', color);
+      // Face: Protruding U-shape on the left side
+      addPath(g, 'M -0.85 0.05 C -1.1 0.05 -1.15 0.35 -0.85 0.35', color);
+      // Face details
+      addCircle(g, -0.95, 0.15, 0.02, color); // Eye dot
+      // Legs: 4 sticks
       addPath(g, 'M -0.4 0.5 L -0.45 0.8', color);
-      addPath(g, 'M -0.1 0.55 L -0.1 0.85', color);
-      addPath(g, 'M 0.4 0.5 L 0.45 0.8', color);
+      addPath(g, 'M -0.15 0.55 L -0.15 0.85', color);
+      addPath(g, 'M 0.3 0.55 L 0.3 0.85', color);
+      addPath(g, 'M 0.55 0.5 L 0.6 0.8', color);
       return g;
     }
 
@@ -519,11 +521,11 @@ const APP_VERSION = "3.5.11";
     }
 
     if(type==='frog'){
-       // Outline: Wide oval base, large eye bumps on top contour
-       addPath(g, 'M -0.9 0.1 C -0.9 -0.6 -0.7 -0.6 -0.5 -0.6 C -0.5 -1.0 0.0 -1.0 0.0 -0.6 C 0.0 -0.6 0.0 -0.6 0.0 -0.6 C 0.0 -1.0 0.5 -1.0 0.5 -0.6 C 0.7 -0.6 0.9 -0.6 0.9 0.1 C 0.9 0.7 0.5 0.9 0 0.9 C -0.5 0.9 -0.9 0.7 -0.9 0.1', color);
-       // Eyes: Circles inside the bumps
-       addCircle(g, -0.25, -0.6, 0.06, color);
-       addCircle(g, 0.25, -0.6, 0.06, color);
+       // [修正] 輪郭を横に広くのっぺりさせ、目の突起を左右に離す
+       addPath(g, 'M -0.9 0.1 C -0.9 -0.5 -0.7 -0.5 -0.6 -0.5 C -0.6 -0.9 -0.2 -0.9 -0.2 -0.5 L 0.2 -0.5 C 0.2 -0.9 0.6 -0.9 0.6 -0.5 C 0.7 -0.5 0.9 -0.5 0.9 0.1 C 0.9 0.6 0.5 0.8 0 0.8 C -0.5 0.8 -0.9 0.6 -0.9 0.1', color);
+       // Eyes: Circles inside the bumps (separated)
+       addCircle(g, -0.4, -0.65, 0.05, color);
+       addCircle(g, 0.4, -0.65, 0.05, color);
        // Mouth: Wide smile
        addPath(g, 'M -0.4 0.2 Q 0 0.5 0.4 0.2', color);
        return g;
@@ -723,7 +725,7 @@ const APP_VERSION = "3.5.11";
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.11"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.12"); }
 </script>
 </body>
 </html>
