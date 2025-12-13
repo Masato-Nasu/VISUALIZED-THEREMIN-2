@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Cute Ver.</title>
-<link rel="manifest" href="./manifest.json?v=3.5.7">
+<link rel="manifest" href="./manifest.json?v=3.5.8">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -66,8 +66,8 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.7) === */
-const APP_VERSION = "3.5.7";
+/* === Hard update guard (v3.5.8) === */
+const APP_VERSION = "3.5.8";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -99,7 +99,7 @@ const APP_VERSION = "3.5.7";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>クマとカエルをもっとゆるかわに v3.5.7</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>クマ修正 v3.5.8</div>
   </div>
 </div>
 
@@ -429,12 +429,11 @@ const APP_VERSION = "3.5.7";
     g.appendChild(a); g.appendChild(b); g.appendChild(c);
   }
 
-  // === KAWAII PATHS (Retrying Bear and Frog for extra cuteness) ===
+  // === KAWAII PATHS (Updated Bear) ===
   function makeCuteAnimal(type, color){
     const g = el('g');
 
     if(type==='star'){
-      // Rounded chubby star
       addPath(g, 'M 0 -0.95 Q 0.2 -0.4 0.9 -0.3 Q 0.4 0.1 0.6 0.85 Q 0 0.5 -0.6 0.85 Q -0.4 0.1 -0.9 -0.3 Q -0.2 -0.4 0 -0.95 Z', color);
       addPath(g, 'M -0.25 -0.05 L -0.25 -0.05', color); 
       addPath(g, 'M 0.25 -0.05 L 0.25 -0.05', color);
@@ -442,16 +441,17 @@ const APP_VERSION = "3.5.7";
     }
 
     if(type==='bear'){
-      // [再修正] 手描きのような「いびつな丸（下ぶくれ）」+「ちょこんとついた耳」
-      // Head: wide bottom, narrower top, not perfect circle
-      addPath(g, 'M -0.85 0.1 C -0.9 -0.6 -0.6 -0.9 0 -0.9 C 0.6 -0.9 0.9 -0.6 0.85 0.1 C 0.8 0.7 0.5 0.95 0 0.95 C -0.5 0.95 -0.8 0.7 -0.85 0.1', color);
-      // Ears: Round and slightly floppy
-      addPath(g, 'M -0.65 -0.75 C -0.9 -0.8 -1.1 -0.6 -1.0 -0.3', color);
-      addPath(g, 'M 0.65 -0.75 C 0.9 -0.8 1.1 -0.6 1.0 -0.3', color);
-      // Face: Centered low, small eyes, small nose
-      addPath(g, 'M -0.2 -0.05 L -0.2 -0.05', color);
-      addPath(g, 'M 0.2 -0.05 L 0.2 -0.05', color);
-      addPath(g, 'M 0 0.2 L 0 0.2', color);
+      // [再修正] 王道のテディベア型（丸い顔・丸い耳・中心に寄った顔）
+      // Head: Round but slightly wide
+      addPath(g, 'M -0.9 0.0 C -0.9 -0.8 0.9 -0.8 0.9 0.0 C 0.9 0.8 -0.9 0.8 -0.9 0.0', color);
+      // Ears: Sitting nicely on top corners
+      addPath(g, 'M -0.8 -0.6 C -1.1 -0.9 -0.5 -1.1 -0.4 -0.65', color);
+      addPath(g, 'M 0.4 -0.65 C 0.5 -1.1 1.1 -0.9 0.8 -0.6', color);
+      // Face: Eyes dots, nose oval, small smile
+      addPath(g, 'M -0.3 -0.1 L -0.3 -0.1', color);
+      addPath(g, 'M 0.3 -0.1 L 0.3 -0.1', color);
+      addPath(g, 'M -0.1 0.2 Q 0 0.15 0.1 0.2 Q 0 0.25 -0.1 0.2', color); // Nose
+      addPath(g, 'M -0.2 0.35 Q 0 0.5 0.2 0.35', color); // Mouth
       return g;
     }
 
@@ -485,13 +485,9 @@ const APP_VERSION = "3.5.7";
     }
 
     if(type==='frog'){
-       // [再修正] 手描き通り「目の出っ張りと顔の輪郭を一体化」させる
-       // Outline: Wide jaw, eyes popping out from the top silhouette smoothly
        addPath(g, 'M -0.9 0.1 C -0.9 -0.3 -0.7 -0.5 -0.6 -0.6 C -0.7 -0.9 -0.4 -1.1 -0.2 -0.9 C 0 -0.8 0 -0.8 0.2 -0.9 C 0.4 -1.1 0.7 -0.9 0.6 -0.6 C 0.7 -0.5 0.9 -0.3 0.9 0.1 C 0.9 0.6 0.5 0.9 0 0.9 C -0.5 0.9 -0.9 0.6 -0.9 0.1', color);
-       // Eyes: Simple dots inside the bumps
        addPath(g, 'M -0.45 -0.6 L -0.45 -0.6', color);
        addPath(g, 'M 0.45 -0.6 L 0.45 -0.6', color);
-       // Mouth: Wide and loose
        addPath(g, 'M -0.3 0.3 Q 0 0.5 0.3 0.3', color);
        return g;
     }
@@ -690,7 +686,7 @@ const APP_VERSION = "3.5.7";
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.7"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.8"); }
 </script>
 </body>
 </html>
