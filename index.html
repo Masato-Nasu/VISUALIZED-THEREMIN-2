@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Songs & Shapes</title>
-<link rel="manifest" href="./manifest.json?v=3.3.1">
+<link rel="manifest" href="./manifest.json?v=3.3.2">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -75,7 +75,7 @@
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.3.1</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.3.2</div>
   </div>
 </div>
 
@@ -356,12 +356,50 @@
   function el(name){ return document.createElementNS('http://www.w3.org/2000/svg', name); }
 
   function pathD(type){
-    if(type==='star') return 'M 0 -1 L 0.235 -0.324 L 0.951 -0.309 L 0.381 0.124 L 0.588 0.809 L 0 0.4 L -0.588 0.809 L -0.381 0.124 L -0.951 -0.309 L -0.235 -0.324 Z';
-    if(type==='butterfly') return 'M 0 -0.95 C 0.10 -0.2 0.10 0.2 0 0.95 C -0.10 0.2 -0.10 -0.2 0 -0.95 M 0 -0.2 C -1.05 -1.00 -1.10 0.45 0 0.55 M 0 -0.2 C 1.05 -1.00 1.10 0.45 0 0.55';
-    if(type==='sheep') return 'M -0.9 -0.05 C -0.8 -0.6 -0.2 -0.8 0.2 -0.7 C 0.7 -0.6 1.0 -0.2 0.85 0.3 C 0.7 0.8 0.1 0.9 -0.4 0.7 C -0.9 0.5 -1.0 0.2 -0.9 -0.05 Z M 0.55 0.10 C 0.65 -0.05 0.95 -0.05 1.05 0.12 C 1.15 0.30 0.95 0.50 0.75 0.45 C 0.58 0.40 0.48 0.25 0.55 0.10 Z';
-    if(type==='bear') return 'M 0 0 m -0.8 0 a 0.8 0.8 0 1 0 1.6 0 a 0.8 0.8 0 1 0 -1.6 0 M -0.6 -0.75 m -0.28 0 a 0.28 0.28 0 1 0 0.56 0 a 0.28 0.28 0 1 0 -0.56 0 M 0.6 -0.75 m -0.28 0 a 0.28 0.28 0 1 0 0.56 0 a 0.28 0.28 0 1 0 -0.56 0';
-    if(type==='bee') return 'M -0.9 0 C -0.9 -0.35 -0.4 -0.6 0 -0.6 C 0.6 -0.6 0.9 -0.3 0.9 0 C 0.9 0.3 0.6 0.6 0 0.6 C -0.4 0.6 -0.9 0.35 -0.9 0 Z M -0.3 -0.55 L -0.3 0.55 M 0  -0.60 L 0 0.60 M 0.3 -0.55 L 0.3 0.55 M -0.35 -0.60 C -0.55 -0.85 -0.90 -0.55 -0.70 -0.25 C -0.55 0.00 -0.25 -0.20 -0.35 -0.60 Z M 0.35 -0.60 C 0.55 -0.85 0.90 -0.55 0.70 -0.25 C 0.55 0.00 0.25 -0.20 0.35 -0.60 Z';
-    if(type==='frog') return 'M 0 0.12 C -0.75 0.05 -0.75 -0.55 -0.15 -0.60 C 0.15 -0.62 0.75 -0.55 0.75 0.12 C 0.75 0.78 0.1 0.80 0 0.70 C -0.1 0.80 -0.75 0.78 -0.75 0.12 Z M -0.45 -0.50 m -0.18 0 a 0.18 0.18 0 1 0 0.36 0 a 0.18 0.18 0 1 0 -0.36 0 M 0.45 -0.50 m -0.18 0 a 0.18 0.18 0 1 0 0.36 0 a 0.18 0.18 0 1 0 -0.36 0 M -0.30 0.25 Q 0 0.43 0.30 0.25';
+    // normalized around origin in [-1,1]
+    if(type==='star'){
+      return 'M 0 -1 L 0.235 -0.324 L 0.951 -0.309 L 0.381 0.124 L 0.588 0.809 L 0 0.4 L -0.588 0.809 L -0.381 0.124 L -0.951 -0.309 L -0.235 -0.324 Z';
+    }
+    if(type==='sheep'){
+      // fluffy body + head (simple, readable)
+      return 'M -0.85 0.05 C -0.98 -0.22 -0.72 -0.55 -0.38 -0.45 C -0.30 -0.78 0.15 -0.82 0.25 -0.55 C 0.55 -0.78 0.98 -0.35 0.75 -0.08 C 0.98 0.08 0.86 0.55 0.52 0.45 C 0.35 0.78 -0.22 0.78 -0.26 0.52 C -0.62 0.68 -0.98 0.40 -0.85 0.05 Z ' +
+             'M 0.72 0.10 m -0.26 0 a 0.26 0.26 0 1 0 0.52 0 a 0.26 0.26 0 1 0 -0.52 0 ' +
+             'M 0.62 0.08 m -0.05 0 a 0.05 0.05 0 1 0 0.10 0 a 0.05 0.05 0 1 0 -0.10 0 ' +
+             'M 0.82 0.08 m -0.05 0 a 0.05 0.05 0 1 0 0.10 0 a 0.05 0.05 0 1 0 -0.10 0';
+    }
+    if(type==='bear'){
+      // bear face (head + ears + eyes + nose)
+      return 'M 0 0 m -0.72 0 a 0.72 0.72 0 1 0 1.44 0 a 0.72 0.72 0 1 0 -1.44 0 ' +
+             'M -0.48 -0.70 m -0.22 0 a 0.22 0.22 0 1 0 0.44 0 a 0.22 0.22 0 1 0 -0.44 0 ' +
+             'M 0.48 -0.70 m -0.22 0 a 0.22 0.22 0 1 0 0.44 0 a 0.22 0.22 0 1 0 -0.44 0 ' +
+             'M -0.22 -0.10 m -0.06 0 a 0.06 0.06 0 1 0 0.12 0 a 0.06 0.06 0 1 0 -0.12 0 ' +
+             'M 0.22 -0.10 m -0.06 0 a 0.06 0.06 0 1 0 0.12 0 a 0.06 0.06 0 1 0 -0.12 0 ' +
+             'M 0 0.10 m -0.10 0 a 0.10 0.08 0 1 0 0.20 0 a 0.10 0.08 0 1 0 -0.20 0 ' +
+             'M -0.14 0.18 Q 0 0.30 0.14 0.18';
+    }
+    if(type==='butterfly'){
+      // butterfly: body + two wings (symmetry)
+      return 'M 0 -0.72 L 0 0.72 ' +
+             'M 0 -0.18 C -0.95 -0.95 -1.10 0.35 -0.20 0.22 C -0.90 0.85 -0.18 1.00 0 0.45 ' +
+             'M 0 -0.18 C 0.95 -0.95 1.10 0.35 0.20 0.22 C 0.90 0.85 0.18 1.00 0 0.45 ' +
+             'M 0 -0.72 C -0.10 -0.92 -0.22 -1.00 -0.34 -1.05 ' +
+             'M 0 -0.72 C 0.10 -0.92 0.22 -1.00 0.34 -1.05';
+    }
+    if(type==='bee'){
+      // bee: body + stripes + wings + stinger
+      return 'M -0.90 0 C -0.90 -0.50 -0.30 -0.78 0.28 -0.74 C 0.86 -0.70 0.95 -0.18 0.86 0.10 C 0.76 0.65 0.12 0.78 -0.30 0.62 C -0.82 0.42 -0.90 0.15 -0.90 0 Z ' +
+             'M -0.28 -0.62 L -0.28 0.58 M 0 -0.72 L 0 0.70 M 0.28 -0.62 L 0.28 0.58 ' +
+             'M -0.10 -0.58 C -0.60 -1.05 -1.05 -0.62 -0.62 -0.25 C -0.32 0.02 -0.02 -0.12 -0.10 -0.58 Z ' +
+             'M 0.10 -0.58 C 0.60 -1.05 1.05 -0.62 0.62 -0.25 C 0.32 0.02 0.02 -0.12 0.10 -0.58 Z ' +
+             'M 0.90 0 L 1.08 -0.10 L 1.08 0.10 Z';
+    }
+    if(type==='frog'){
+      // frog face (round + eyes + smile)
+      return 'M -0.85 0.15 C -0.85 -0.40 -0.55 -0.78 -0.10 -0.78 C 0.55 -0.78 0.85 -0.40 0.85 0.15 C 0.85 0.85 0.20 0.86 0 0.65 C -0.20 0.86 -0.85 0.85 -0.85 0.15 Z ' +
+             'M -0.45 -0.48 m -0.16 0 a 0.16 0.16 0 1 0 0.32 0 a 0.16 0.16 0 1 0 -0.32 0 ' +
+             'M 0.45 -0.48 m -0.16 0 a 0.16 0.16 0 1 0 0.32 0 a 0.16 0.16 0 1 0 -0.32 0 ' +
+             'M -0.32 0.25 Q 0 0.45 0.32 0.25';
+    }
     return 'M 0 -1 L 0.235 -0.324 L 0.951 -0.309 L 0.381 0.124 L 0.588 0.809 L 0 0.4 L -0.588 0.809 L -0.381 0.124 L -0.951 -0.309 L -0.235 -0.324 Z';
   }
 
@@ -373,16 +411,16 @@
     p1.setAttribute('d', d);
     p1.setAttribute('fill', 'none');
     p1.setAttribute('stroke', color);
-    p1.setAttribute('stroke-width', String(LINE_BASE*2.6));
+    p1.setAttribute('stroke-width', String(LINE_BASE*2.2));
     p1.setAttribute('stroke-linecap','round');
     p1.setAttribute('stroke-linejoin','round');
-    p1.setAttribute('opacity','0.18');
+    p1.setAttribute('opacity','0.14');
 
     const p2 = el('path');
     p2.setAttribute('d', d);
     p2.setAttribute('fill', 'none');
     p2.setAttribute('stroke', color);
-    p2.setAttribute('stroke-width', String(LINE_BASE*1.6));
+    p2.setAttribute('stroke-width', String(LINE_BASE*1.45));
     p2.setAttribute('stroke-linecap','round');
     p2.setAttribute('stroke-linejoin','round');
     p2.setAttribute('opacity','0.75');
@@ -569,7 +607,7 @@
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.3.1"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.3.2"); }
 </script>
 </body>
 </html>
