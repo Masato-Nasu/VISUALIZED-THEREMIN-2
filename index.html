@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Round Frog Ver.</title>
-<link rel="manifest" href="./manifest.json?v=3.5.28">
+<link rel="manifest" href="./manifest.json?v=3.5.29">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -66,7 +66,7 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.28) === */
+/* === Hard update guard (v3.5.29) === */
 const APP_VERSION = "3.5.22";
 (async () => {
   try {
@@ -100,7 +100,7 @@ const APP_VERSION = "3.5.22";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.28</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.29</div>
   </div>
 </div>
 
@@ -323,11 +323,11 @@ const APP_VERSION = "3.5.22";
     star: { label:'きらきら星', icon:'☆', tempo:112, meter:4, baseVel:0.92, type:'star', color:'#facc15',
       seq:[{n:60,d:1},{n:60,d:1},{n:67,d:1},{n:67,d:1},{n:69,d:1},{n:69,d:1},{n:67,d:2},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:2},{n:67,d:1},{n:67,d:1},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:2},{n:67,d:1},{n:67,d:1},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:2},{n:60,d:1},{n:60,d:1},{n:67,d:1},{n:67,d:1},{n:69,d:1},{n:69,d:1},{n:67,d:2},{n:65,d:1},{n:65,d:1},{n:64,d:1},{n:64,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:2},{n:null,d:1}] },
     sheep: { label:'メリーさんの羊', icon:'🐑', tempo:110, meter:4, baseVel:0.92, type:'sheep', color:'#60a5fa',
-      seq:[{n:64,d:1.5},{n:62,d:0.5},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:null,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:null,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:null,d:1},{n:64,d:1.5},{n:62,d:0.5},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:null,d:1},{n:62,d:1},{n:64,d:1},{n:62,d:1.5},{n:62,d:0.5},{n:60,d:4},{n:null,d:1}] },
+      seq:[{n:64,d:1.5},{n:62,d:0.5},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:null,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:null,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:null,d:1},{n:64,d:1.5},{n:62,d:0.5},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:null,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1.5},{n:62,d:0.5},{n:60,d:4},{n:null,d:1}] },
     bear: { label:'森のくまさん', icon:'🐻', tempo: 96, meter:4, baseVel:0.90, type:'bear', color:'#34d399',
       seq:[{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:72,d:1},{n:67,d:1},{n:64,d:1},{n:60,d:1},{n:69,d:2},{n:null,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:69,d:0.5},{n:67,d:1},{n:68,d:1},{n:69,d:1},{n:71,d:1},{n:72,d:2},{n:null,d:0.5},{n:67,d:0.5},{n:66,d:0.5},{n:67,d:0.5},{n:64,d:1},{n:null,d:1},{n:null,d:0.5},{n:64,d:0.5},{n:63,d:0.5},{n:64,d:0.5},{n:60,d:1},{n:null,d:1},{n:null,d:0.5},{n:64,d:0.5},{n:62,d:0.5},{n:60,d:0.5},{n:62,d:1},{n:null,d:1},{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:67,d:0.5},{n:64,d:1},{n:null,d:1},{n:null,d:0.5},{n:67,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:72,d:1},{n:67,d:1},{n:64,d:1},{n:60,d:1},{n:69,d:2},{n:null,d:0.5},{n:69,d:0.5},{n:71,d:0.5},{n:69,d:0.5},{n:67,d:1},{n:65,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:4},{n:null,d:1}] },
     butterfly: { label:'ちょうちょう', icon:'🦋', tempo:112, meter:4, baseVel:0.90, type:'butterfly', color:'#a78bfa',
-      seq:[{n:67,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:67,d:1},{n:67,d:2},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:2},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:2},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:1}] },
+      seq:[{n:67,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:0.5},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:1},{n:67,d:1},{n:67,d:2},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:60,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:62,d:1},{n:64,d:1},{n:65,d:2},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:67,d:2},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:62,d:2},{n:60,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},{n:64,d:1},{n:64,d:1},{n:64,d:2},{n:null,d:1}] },
     bee: { label:'ぶんぶんぶん', icon:'🐝', tempo:126, meter:4, baseVel:0.90, type:'bee', color:'#f472b6',
       seq:[{n:67,d:1},{n:65,d:1},{n:64,d:1},{n:null,d:1},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:60,d:1},{n:null,d:1},{n:64,d:0.5},{n:65,d:0.5},{n:67,d:0.5},{n:64,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:67,d:0.5},{n:64,d:0.5},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:67,d:1},{n:65,d:1},{n:64,d:1},{n:null,d:1},{n:62,d:0.5},{n:64,d:0.5},{n:65,d:0.5},{n:62,d:0.5},{n:60,d:1},{n:null,d:1},{n:null,d:1}] },
     frog: { label:'かえるの合唱', icon:'🐸', tempo:112, meter:4, baseVel:0.90, type:'frog', color:'#60a5fa',
@@ -728,7 +728,7 @@ const APP_VERSION = "3.5.22";
   }
   try{ window.__startApp = startApp; }catch(_e){}
 
-  // v3.5.28 patch: start on first touch anywhere (no button required)
+  // v3.5.29 patch: start on first touch anywhere (no button required)
   const __startOnGesture = (e)=>{ try{ if(!started){ suppressTapSfx=true; startApp(); } else { resumeAudio(); } }catch(_err){} };
   window.addEventListener('pointerdown', __startOnGesture, {once:true, passive:true, capture:true});
   window.addEventListener('touchstart', __startOnGesture, {once:true, passive:true, capture:true});
@@ -753,9 +753,9 @@ const APP_VERSION = "3.5.22";
 if("serviceWorker" in navigator){  }
 </script>
 
-<!-- patch v3.5.28: hide starter, robust start, error overlay -->
+<!-- patch v3.5.29: hide starter, robust start, error overlay -->
 <div id="verTag" style="position:fixed;right:10px;bottom:10px;font:12px/1 system-ui;color:#00000055;z-index:9999;user-select:none;pointer-events:none;">
-  v3.5.28
+  v3.5.29
 </div>
 <div id="tapHint" style="position:fixed;left:12px;bottom:12px;font:14px/1.2 system-ui;color:#00000088;background:rgba(255,255,255,.65);backdrop-filter:blur(8px);padding:8px 10px;border-radius:14px;z-index:9999;user-select:none;">
   画面をタップすると音が出ます
@@ -774,7 +774,7 @@ if("serviceWorker" in navigator){  }
 
   function showErr(msg) {
     panel.style.display = 'block';
-    panel.textContent = '⚠ エラー表示 (v3.5.28)\n' + msg;
+    panel.textContent = '⚠ エラー表示 (v3.5.29)\n' + msg;
   }
 
   window.addEventListener('error', (e) => {
@@ -796,7 +796,7 @@ if("serviceWorker" in navigator){  }
 
   // --- SW register (versioned) ---
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=3.5.28').catch(console.warn);
+    navigator.serviceWorker.register('./sw.js?v=3.5.29').catch(console.warn);
   }
 
   // --- Safe starter: start visuals once on load, unlock audio on first gesture (no restart) ---
