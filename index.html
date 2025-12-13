@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Songs & Shapes</title>
-<link rel="manifest" href="./manifest.json?v=3.3.7">
+<link rel="manifest" href="./manifest.json?v=3.3.8">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -75,7 +75,7 @@
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.3.7</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.3.8</div>
   </div>
 </div>
 
@@ -356,7 +356,7 @@
   function randomStart(){ startSong(SONG_KEYS[(Math.random()*SONG_KEYS.length)|0]); }
 
   // ===== SVG neon (cute animals, size follows theremin pitch) =====
-  const SHAPE_COUNT = 12;          // fewer
+  const SHAPE_COUNT = 9;          // fewer
   const LINE_BASE = 8;             // slightly thicker like the original neon
   const BEAT_AMT = 0.14;
   let shapes = [];
@@ -576,7 +576,7 @@
     window.__pnSmooth = (window.__pnSmooth==null) ? pnTarget : (window.__pnSmooth + (pnTarget - window.__pnSmooth)*0.12);
     const pn = window.__pnSmooth;
     // wider range so it is clearly visible: low=small / high=big
-    const pitchScale = 0.35 + pn*1.65;
+    const pitchScale = 0.25 + pn*1.75;
 
     for(const s of shapes){
       s.x += s.vx; s.y += s.vy; s.rot += 0.006;
@@ -604,15 +604,23 @@
   window.pitchHz = 440;
 
   function setPitchFromY(y){
-    const pmin=120, pmax=900;
-    const n = Math.min(1, Math.max(0, y / H));
-    const curve = Math.sin((1-n)*Math.PI);
-    window.pitchHz = pmin + curve*(pmax-pmin);
+    const pmin=130, pmax=820;
+    // top = high, bottom = low
+    const n = Math.min(1, Math.max(0, 1 - (y / H)));
+    // exponential feels musical & stable
+    window.pitchHz = pmin * Math.pow(pmax/pmin, n);
+    window.visualPitchNorm = n;
+
     if(actx && oscA && oscB){
       const t0 = actx.currentTime;
       oscA.frequency.setTargetAtTime(window.pitchHz, t0, 0.02);
       oscB.frequency.setTargetAtTime(window.pitchHz, t0, 0.02);
     }
+    if(actx && thFilter){
+      const t0 = actx.currentTime;
+      thFilter.frequency.setTargetAtTime(900 + n*1100, t0, 0.06);
+    }
+  }
     if(actx && thFilter){
       const t0 = actx.currentTime;
       thFilter.frequency.setTargetAtTime(1100 + curve*900, t0, 0.06);
@@ -709,7 +717,7 @@
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.3.7"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.3.8"); }
 </script>
 </body>
 </html>
