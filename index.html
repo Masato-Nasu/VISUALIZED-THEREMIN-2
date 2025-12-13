@@ -66,7 +66,7 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.35) === */
+/* === Hard update guard (v3.5.36) === */
 const APP_VERSION = "3.5.22";
 (async () => {
   try {
@@ -89,6 +89,28 @@ const APP_VERSION = "3.5.22";
 </script>
 
 <style>#starter{display:none !important; pointer-events:none !important;}</style>
+
+<script>
+// __pwaReset: open with ?reset=1 to unregister SW + clear caches (helps when PWA is stuck white)
+(async()=>{
+  try {
+    const qs = new URLSearchParams(location.search);
+    if(qs.get('reset')==='1'){
+      if('serviceWorker' in navigator){
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r=>r.unregister()));
+      }
+      if('caches' in window){
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k=>caches.delete(k)));
+      }
+      qs.delete('reset');
+      location.replace(location.pathname + (qs.toString()?('?'+qs.toString()):''));
+    }
+  } catch(_e){}
+})();
+</script>
+
 </head>
 <body>
 <div id="bg"></div>
@@ -100,7 +122,7 @@ const APP_VERSION = "3.5.22";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.35</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.36</div>
   </div>
 </div>
 
@@ -728,7 +750,7 @@ const APP_VERSION = "3.5.22";
   }
   try{ window.__startApp = startApp; }catch(_e){}
 
-  // v3.5.35 patch: start on first touch anywhere (no button required)
+  // v3.5.36 patch: start on first touch anywhere (no button required)
   const __startOnGesture = (e)=>{ try{ if(!started){ suppressTapSfx=true; startApp(); } else { resumeAudio(); } }catch(_err){} };
   window.addEventListener('pointerdown', __startOnGesture, {once:true, passive:true, capture:true});
   window.addEventListener('touchstart', __startOnGesture, {once:true, passive:true, capture:true});
@@ -751,9 +773,9 @@ const APP_VERSION = "3.5.22";
 </script>
 
 
-<!-- patch v3.5.35: hide starter, robust start, error overlay -->
+<!-- patch v3.5.36: hide starter, robust start, error overlay -->
 <div id="verTag" style="position:fixed;right:10px;bottom:10px;font:12px/1 system-ui;color:#00000055;z-index:9999;user-select:none;pointer-events:none;">
-  v3.5.35
+  v3.5.36
 </div>
 <script>
 (() => {
@@ -769,7 +791,7 @@ const APP_VERSION = "3.5.22";
 
   function showErr(msg) {
     panel.style.display = 'block';
-    panel.textContent = '⚠ エラー表示 (v3.5.35)\n' + msg;
+    panel.textContent = '⚠ エラー表示 (v3.5.36)\n' + msg;
   }
 
   window.addEventListener('error', (e) => {
@@ -791,7 +813,7 @@ const APP_VERSION = "3.5.22";
 
   // --- SW register (versioned) ---
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(console.warn);
+    navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' }).catch(console.warn);
   }
 
   // --- Safe starter: start visuals once on load, unlock audio on first gesture (no restart) ---

@@ -1,5 +1,5 @@
-// sw.js v3.5.35
-const CACHE = 'VISUALIZED-THEREMIN-2-v3-5-35';
+// sw.js v3.5.36
+const CACHE = 'VISUALIZED-THEREMIN-2-v3-5-36';
 const ASSETS = [
   './',
   './index.html',
