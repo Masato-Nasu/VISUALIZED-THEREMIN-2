@@ -68,7 +68,7 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.16) === */
+/* === Hard update guard (v3.5.17) === */
 const APP_VERSION = "3.5.14";
 (async () => {
   try {
@@ -93,11 +93,15 @@ const APP_VERSION = "3.5.14";
 </head>
 <body>
 <div id="bg"></div>
-<div>「はじめる」を押すと、<br>曲と形がランダムで始まるよ</div>
+
+<div id="starter" class="starter">
+  <div class="card">
+    <div class="big">Baby Theremin</div>
+    <div>「はじめる」を押すと、<br>曲と形がランダムで始まるよ</div>
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.16</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.17</div>
   </div>
 </div>
 
@@ -747,13 +751,13 @@ if("serviceWorker" in navigator){  }
 </script>
 
 <script>
-// autostart v3.5.16
+// autostart v3.5.17
 window.addEventListener('load', ()=>{
   try {
     if (typeof startApp === 'function') startApp();
     else if (typeof startAll === 'function') startAll(null);
   } catch (e) {
-    console.warn(e);
+    console.warn('autostart failed', e);
   }
 }, { once:true });
 </script>
@@ -761,7 +765,7 @@ window.addEventListener('load', ()=>{
 
 <script>
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js?v=3.5.16').catch(console.warn);
+  navigator.serviceWorker.register('./sw.js?v=3.5.17').catch(console.warn);
 }
 </script>
 

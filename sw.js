@@ -1,5 +1,5 @@
-// sw.js v3.5.16
-const CACHE='VISUALIZED-THEREMIN-2-v3-5-16';
+// sw.js v3.5.17
+const CACHE='VISUALIZED-THEREMIN-2-v3-5-17';
 const ASSETS=[
   './',
   './index.html?v=3.5.14',
