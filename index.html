@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Songs & Shapes</title>
-<link rel="manifest" href="./manifest.json?v=3.2.4">
+<link rel="manifest" href="./manifest.json?v=3.2.5">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -63,7 +63,7 @@
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.2.4</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.2.5</div>
   </div>
 </div>
 
@@ -248,14 +248,18 @@
       ]
     },
     bee: {
-      label:'ぶんぶんぶん', icon:'🐝', tempo:104, type:'bee', color:'#34d399',
+      label:'ぶんぶんぶん', icon:'🐝', tempo:96, type:'bee', color:'#34d399',
       // C E G G | A A G | F E D C | G G F E | D D C  (日本でよく歌う形)
       seq: [
-        {n:60,d:1},{n:64,d:1},{n:67,d:1},{n:67,d:1},
-        {n:69,d:1},{n:69,d:1},{n:67,d:2},
-        {n:65,d:1},{n:64,d:1},{n:62,d:1},{n:60,d:2},
-        {n:67,d:1},{n:67,d:1},{n:65,d:1},{n:64,d:1},
-        {n:62,d:1},{n:62,d:1},{n:60,d:2},
+
+        {n:67,d:1},{n:65,d:1},{n:64,d:2},
+        {n:62,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:60,d:2},
+        {n:64,d:1},{n:65,d:1},{n:67,d:1},{n:64,d:1},
+        {n:62,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},
+        {n:64,d:1},{n:65,d:1},{n:67,d:1},{n:64,d:1},
+        {n:62,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},
+        {n:67,d:1},{n:65,d:1},{n:64,d:2},
+        {n:62,d:1},{n:64,d:1},{n:65,d:1},{n:62,d:1},{n:60,d:2},
         {n:null,d:1}
       ]
     },
@@ -606,7 +610,7 @@
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.2.4"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.2.5"); }
 </script>
 </body>
 </html>
