@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Songs & Shapes</title>
-<link rel="manifest" href="./manifest.json?v=3.3.4">
+<link rel="manifest" href="./manifest.json?v=3.3.5">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -75,7 +75,7 @@
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.3.4</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.3.5</div>
   </div>
 </div>
 
@@ -83,7 +83,7 @@
 <svg id="stage" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
   <defs>
     <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feGaussianBlur stdDeviation="5" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -356,8 +356,8 @@
   function randomStart(){ startSong(SONG_KEYS[(Math.random()*SONG_KEYS.length)|0]); }
 
   // ===== SVG neon (animal-by-song) =====
-  const SHAPE_COUNT = 22;
-  const LINE_BASE = 7;
+  const SHAPE_COUNT = 20;
+  const LINE_BASE = 8;
   const BEAT_AMT = 0.18;
   let shapes = [];
   let t=0;
@@ -423,7 +423,8 @@
     p1.setAttribute('stroke-width', String(LINE_BASE*2.2));
     p1.setAttribute('stroke-linecap','round');
     p1.setAttribute('stroke-linejoin','round');
-    p1.setAttribute('opacity','0.16');
+    p1.setAttribute('vector-effect','non-scaling-stroke');
+    p1.setAttribute('opacity','0.14');
     // soft glow (stable): blur inside SVG filter
     p1.setAttribute('filter','url(#glow)');
 
@@ -434,7 +435,8 @@
     p2.setAttribute('stroke-width', String(LINE_BASE*1.45));
     p2.setAttribute('stroke-linecap','round');
     p2.setAttribute('stroke-linejoin','round');
-    p2.setAttribute('opacity','0.85');
+    p2.setAttribute('vector-effect','non-scaling-stroke');
+    p2.setAttribute('opacity','0.80');
 
     const p3 = el('path');
     p3.setAttribute('d', d);
@@ -443,6 +445,7 @@
     p3.setAttribute('stroke-width', String(Math.max(1, LINE_BASE*0.60)));
     p3.setAttribute('stroke-linecap','round');
     p3.setAttribute('stroke-linejoin','round');
+    p3.setAttribute('vector-effect','non-scaling-stroke');
     p3.setAttribute('opacity','0.95');
 
     g.appendChild(p1); g.appendChild(p2); g.appendChild(p3);
@@ -468,7 +471,7 @@
 
     // fallback emoji updates already handled elsewhere
     for(let i=0;i<SHAPE_COUNT;i++){
-      const r = 55*(0.75+Math.random()*1.10);
+      const r = 45*(0.75+Math.random()*1.05);
       const x = Math.random()*W;
       const y = Math.random()*H;
       const rot = Math.random()*Math.PI*2;
@@ -629,7 +632,7 @@
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.3.4"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.3.5"); }
 </script>
 </body>
 </html>
