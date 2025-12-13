@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Round Frog Ver.</title>
-<link rel="manifest" href="./manifest.json?v=3.5.22">
+<link rel="manifest" href="./manifest.json?v=3.5.23">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -66,7 +66,7 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.22) === */
+/* === Hard update guard (v3.5.23) === */
 const APP_VERSION = "3.5.22";
 (async () => {
   try {
@@ -100,7 +100,7 @@ const APP_VERSION = "3.5.22";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.22</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.23</div>
   </div>
 </div>
 
@@ -162,7 +162,7 @@ const APP_VERSION = "3.5.22";
   let seqTimer=null, seqPos=0, currentSong=null;
 
   const chime = new Audio('./Chime.mp3');
-  chime.volume = 0.30;
+  chime.volume = 0.0; // disabled
 
   function ensureAudio(){
     if(actx) return;
@@ -703,7 +703,7 @@ const APP_VERSION = "3.5.22";
     if(thereminOn){ stopTheremin(); }
     else {
       pluck();
-      try{ chime.currentTime=0; chime.play(); }catch(_ ){}
+      /* open chime disabled */
       const p = ptFromEvent(e) || lastPos;
       if(p) burstAt(p.x,p.y);
     }
@@ -720,7 +720,7 @@ const APP_VERSION = "3.5.22";
   }
   try{ window.__startApp = startApp; }catch(_e){}
 
-  // v3.5.22 patch: start on first touch anywhere (no button required)
+  // v3.5.23 patch: start on first touch anywhere (no button required)
   const __startOnGesture = (e)=>{ try{ if(!started) startApp(); else resumeAudio(); }catch(_err){} };
   window.addEventListener('pointerdown', __startOnGesture, {once:true, passive:true, capture:true});
   window.addEventListener('touchstart', __startOnGesture, {once:true, passive:true, capture:true});
@@ -734,9 +734,10 @@ const APP_VERSION = "3.5.22";
     btn.addEventListener('click', (e)=>{
       e.preventDefault(); e.stopPropagation();
       if(!started) startApp();
-      startSong(btn.dataset.song);
+      if(btn.dataset.song !== currentSong){ startSong(btn.dataset.song); }
+      // if same song, do nothing (avoid unintended restart)
       resetShapes();
-    });
+});
   });
 })();
 </script>
@@ -744,9 +745,9 @@ const APP_VERSION = "3.5.22";
 if("serviceWorker" in navigator){  }
 </script>
 
-<!-- patch v3.5.22: hide starter, robust start, error overlay -->
+<!-- patch v3.5.23: hide starter, robust start, error overlay -->
 <div id="verTag" style="position:fixed;right:10px;bottom:10px;font:12px/1 system-ui;color:#00000055;z-index:9999;user-select:none;pointer-events:none;">
-  v3.5.22
+  v3.5.23
 </div>
 <div id="tapHint" style="position:fixed;left:12px;bottom:12px;font:14px/1.2 system-ui;color:#00000088;background:rgba(255,255,255,.65);backdrop-filter:blur(8px);padding:8px 10px;border-radius:14px;z-index:9999;user-select:none;">
   画面をタップすると開始（音が出ます）します
@@ -765,7 +766,7 @@ if("serviceWorker" in navigator){  }
 
   function showErr(msg) {
     panel.style.display = 'block';
-    panel.textContent = '⚠ エラー表示 (v3.5.22)\n' + msg;
+    panel.textContent = '⚠ エラー表示 (v3.5.23)\n' + msg;
   }
 
   window.addEventListener('error', (e) => {
@@ -787,7 +788,7 @@ if("serviceWorker" in navigator){  }
 
   // --- SW register (versioned) ---
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=3.5.22').catch(console.warn);
+    navigator.serviceWorker.register('./sw.js?v=3.5.23').catch(console.warn);
   }
 
   // --- Safe starter: try on load (may fail due to audio policy), then guarantee on first gesture ---
