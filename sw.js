@@ -1,9 +1,9 @@
-// sw.js v3.1.1
-const CACHE='baby-theremin-animals-v3-1-1';
+// sw.js v3.1.2
+const CACHE='visualized-theremin-v3.1.2';
 const ASSETS=[
   './',
-  './index.html?v=3.1.1',
-  './manifest.json?v=3.1.1',
+  './index.html?v=3.1.2',
+  './manifest.json?v=3.1.2',
   './icon-192.png',
   './icon-512.png',
   './Chime.mp3',
@@ -13,4 +13,4 @@ const ASSETS=[
 ];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))); self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))); self.clients.claim();});
-self.addEventListener('fetch',e=>{const req=e.request; if(req.mode==='navigate'){e.respondWith(fetch(req).catch(()=>caches.match('./index.html?v=3.1.1')));return;} e.respondWith(caches.match(req).then(c=>c||fetch(req).then(r=>{const copy=r.clone(); caches.open(CACHE).then(cc=>cc.put(req,copy)); return r;})));});
+self.addEventListener('fetch',e=>{const req=e.request; if(req.mode==='navigate'){e.respondWith(fetch(req).catch(()=>caches.match('./index.html?v=3.1.2')));return;} e.respondWith(caches.match(req).then(c=>c||fetch(req).then(r=>{const copy=r.clone(); caches.open(CACHE).then(cc=>cc.put(req,copy)); return r;})));});

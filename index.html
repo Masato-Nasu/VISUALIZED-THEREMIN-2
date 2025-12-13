@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin Animals</title>
-<link rel="manifest" href="./manifest.json?v=3.1.1">
+<link rel="manifest" href="./manifest.json?v=3.1.0">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --panel:#ffffffcc; --text:#10121a; }
@@ -24,11 +24,17 @@
   input[type="range"]{width:160px}
   select{background:transparent;color:#E8EAF2;border:1px solid #222;padding:8px 10px;border-radius:10px}
   .visually-hidden{ position:absolute; left:-9999px; width:1px; height:1px; opacity:0; }
+
+  #app canvas{ position:absolute; inset:0; width:100%; height:100%; touch-action:manipulation; pointer-events:auto; }
 </style>
 </head>
 <body>
 <div id="app">
-<div class="controls" id="controls">
+</div>
+</div>
+</div>
+
+<div class="controls hidden" id="controls">
   <label class="btn" id="dirBtn">🎵 音楽ファイル<input id="audDir" type="file" multiple accept="audio/*" class="visually-hidden"></label>
   <div class="select">🎶 曲・どうぶつ
     <select id="preset">
@@ -153,10 +159,11 @@
       hasStarted = true;
     }
   }
+
   if(startbtn){ startbtn.addEventListener('click', function(e){ e.stopPropagation(); startAll(null); }); }
-  document.addEventListener('pointerdown', function one(){ 
-    // first user gesture: start audio + preset
-    startAll(presetSel ? presetSel.value : null);
+document.addEventListener('pointerdown', function one(){ 
+    if(starter && starter.parentNode) { startAll(null); }
+    document.removeEventListener('pointerdown', one, {capture:false}); 
   }, {capture:false, once:true});
 
   // ====== Canvas & Interaction ======
@@ -300,7 +307,7 @@
   var seqTimer=null, seqPos=0, seqData=null, seqTempo=100;
   function stopPreset(){ if(seqTimer){ clearTimeout(seqTimer); seqTimer=null; } seqPos=0; }
   
-  // v3.1.1: Play Note with Duration
+  // v3.1.2: Play Note with Duration
   function playNote(n, dur){
       var t=actx.currentTime; var o=actx.createOscillator(); o.type='triangle'; 
       var g=actx.createGain(); g.gain.value=0.0; var f=440*Math.pow(2,(n-69)/12); 
@@ -415,24 +422,30 @@
   });
 
 
-  // ===== Boot: no starter page (v3.1.1) =====
-  (function boot(){
-    try{
-      if(starter && starter.parentNode) starter.parentNode.removeChild(starter);
-      if(controls) controls.classList.remove('hidden');
-      if(!cv){ cv=makeCanvas(); ctx=cv.getContext('2d',{alpha:false}); setupCanvas(); attachPanelGestures(cv); }
-      // seed visuals without forcing audio autoplay
-      if(presetSel){
-        var keys = ['dog','bear','elephant'];
-        if(!presetSel.value || presetSel.value==='none') presetSel.value = keys[Math.floor(Math.random()*keys.length)];
-      }
-      if(typeof reset==='function') reset();
-    }catch(e){ console.warn('boot init failed', e); }
-  })();
+  // --- Auto-open to play screen (no landing page) v3.1.2 ---
+  // Make visuals appear immediately; start audio on first tap (autoplay policy).
+  try{
+    if(!cv){ cv=makeCanvas(); ctx=cv.getContext('2d',{alpha:false}); setupCanvas(); attachPanelGestures(cv); }
+    if(typeof reset==='function') reset();
+  }catch(_e){}
 
+  // ensure starter removed if still present
+  try{ if(starter && starter.parentNode) starter.parentNode.removeChild(starter); }catch(_e){}
+
+  // First user gesture unlocks audio + starts a random preset.
+  let __unlocked=false;
+  const __unlockOnce = (ev)=>{
+    if(__unlocked) return;
+    __unlocked=true;
+    try{ startAll(null); }catch(_e){}
+    document.removeEventListener('pointerdown', __unlockOnce, true);
+    document.removeEventListener('touchstart', __unlockOnce, true);
+  };
+  document.addEventListener('pointerdown', __unlockOnce, true);
+  document.addEventListener('touchstart', __unlockOnce, true);
 })();</script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.1.1"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.1.2"); }
 </script>
 </body>
 </html>
