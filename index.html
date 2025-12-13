@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-<title>Baby Theremin – Sketch Ver.</title>
-<link rel="manifest" href="./manifest.json?v=3.5.10">
+<title>Baby Theremin – Traced Ver.</title>
+<link rel="manifest" href="./manifest.json?v=3.5.11">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -66,8 +66,8 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.10) === */
-const APP_VERSION = "3.5.10";
+/* === Hard update guard (v3.5.11) === */
+const APP_VERSION = "3.5.11";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -99,7 +99,7 @@ const APP_VERSION = "3.5.10";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>手描きの絵をそのまま再現しました v3.5.10</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>絵の形を忠実に修正しました v3.5.11</div>
   </div>
 </div>
 
@@ -380,7 +380,7 @@ const APP_VERSION = "3.5.10";
   }
   function randomStart(){ startSong(SONG_KEYS[(Math.random()*SONG_KEYS.length)|0]); }
 
-  // ===== SVG neon (Hand-Drawn Replication) =====
+  // ===== SVG neon (Tracing Style) =====
   const SHAPE_COUNT = 9;
   const LINE_BASE = 9; 
   const BEAT_AMT = 0.14;
@@ -428,13 +428,21 @@ const APP_VERSION = "3.5.10";
     const [a,b,c] = neonStroke(p, color, LINE_BASE*2.4, LINE_BASE*1.5, Math.max(1, LINE_BASE*0.65));
     g.appendChild(a); g.appendChild(b); g.appendChild(c);
   }
+  function addCircle(g, cx, cy, r, color){
+    const p = el('circle');
+    p.setAttribute('cx', String(cx));
+    p.setAttribute('cy', String(cy));
+    p.setAttribute('r', String(r));
+    const [a,b,c] = neonStroke(p, color, LINE_BASE*2.4, LINE_BASE*1.5, Math.max(1, LINE_BASE*0.65));
+    g.appendChild(a); g.appendChild(b); g.appendChild(c);
+  }
 
-  // === REPLICATING HAND-DRAWN LINES (Wobbly, Asymmetrical) ===
+  // === TRACING HAND-DRAWN SKETCH (Strict) ===
   function makeCuteAnimal(type, color){
     const g = el('g');
 
     if(type==='star'){
-      // [Star: Keep Previous Cute Version]
+      // Rounded chubby star (keep)
       addPath(g, 'M 0 -0.95 Q 0.2 -0.4 0.9 -0.3 Q 0.4 0.1 0.6 0.85 Q 0 0.5 -0.6 0.85 Q -0.4 0.1 -0.9 -0.3 Q -0.2 -0.4 0 -0.95 Z', color);
       addPath(g, 'M -0.25 -0.05 L -0.25 -0.05', color); 
       addPath(g, 'M 0.25 -0.05 L 0.25 -0.05', color);
@@ -442,84 +450,81 @@ const APP_VERSION = "3.5.10";
     }
 
     if(type==='sheep'){
-      // [Sheep: Faithful to Sketch]
-      // Body: Fluffy but with specific flat-ish bottom
-      addPath(g, 'M -0.5 0.55 Q -0.8 0.55 -0.9 0.2 Q -1.05 -0.1 -0.8 -0.3 Q -0.5 -0.6 -0.1 -0.65 Q 0.3 -0.65 0.6 -0.4 Q 0.9 -0.2 0.85 0.2 Q 0.8 0.6 0.4 0.6 L -0.5 0.55', color);
-      // Face: Protruding from left, U-shape with eye
-      addPath(g, 'M -0.85 0.05 Q -1.05 0.05 -1.05 0.25 Q -1.05 0.45 -0.85 0.4', color);
-      addPath(g, 'M -0.95 0.2 L -0.95 0.2', color); // dot eye
-      // Legs: 4 Sticks
-      addPath(g, 'M -0.4 0.6 L -0.45 0.9', color);
-      addPath(g, 'M -0.15 0.65 L -0.15 0.95', color);
-      addPath(g, 'M 0.6 0.5 L 0.65 0.8', color);
-      addPath(g, 'M 0.8 0.35 L 0.9 0.6', color); // back leg kick
+      // Body: Cloud shape, flat bottom, 3 legs drawn
+      addPath(g, 'M -0.5 0.5 Q -0.7 0.5 -0.85 0.3 Q -1.0 0.1 -0.9 -0.2 Q -0.8 -0.5 -0.4 -0.6 Q -0.1 -0.75 0.3 -0.65 Q 0.7 -0.5 0.9 -0.1 Q 1.0 0.2 0.8 0.5 Q 0.6 0.6 0.3 0.55 L -0.5 0.5', color);
+      // Face: U-shape on the left
+      addPath(g, 'M -0.8 -0.1 C -1.0 -0.1 -1.1 0.1 -1.0 0.3', color);
+      // Eye & Mouth
+      addPath(g, 'M -0.9 0.1 L -0.9 0.1', color);
+      // Legs: 3 simple lines
+      addPath(g, 'M -0.4 0.5 L -0.45 0.8', color);
+      addPath(g, 'M -0.1 0.55 L -0.1 0.85', color);
+      addPath(g, 'M 0.4 0.5 L 0.45 0.8', color);
       return g;
     }
 
     if(type==='bear'){
-      // [Bear: Faithful to Sketch]
-      // Head: Not perfect circle, slightly squashed
-      addPath(g, 'M -0.85 0.0 C -0.85 -0.7 0.85 -0.7 0.85 0.0 C 0.85 0.7 -0.85 0.7 -0.85 0.0', color);
-      // Ears: Simple loops
-      addPath(g, 'M -0.7 -0.5 C -1.0 -0.9 -0.4 -1.1 -0.3 -0.7', color);
-      addPath(g, 'M 0.7 -0.5 C 1.0 -0.9 0.4 -1.1 0.3 -0.7', color);
-      // Face: Dots for eyes, line for nose-mouth
-      addPath(g, 'M -0.3 -0.1 L -0.3 -0.1', color);
-      addPath(g, 'M 0.3 -0.1 L 0.3 -0.1', color);
-      addPath(g, 'M 0 0.2 L 0 0.2', color); // Nose dot
-      addPath(g, 'M 0 0.2 L 0 0.4', color); // Vertical line
-      addPath(g, 'M -0.2 0.4 Q 0 0.5 0.2 0.4', color); // Smile
+      // Head: Circle, slightly wider at bottom
+      addPath(g, 'M 0 -0.8 C 0.6 -0.8 0.9 -0.4 0.9 0.1 C 0.9 0.6 0.5 0.95 0 0.95 C -0.5 0.95 -0.9 0.6 -0.9 0.1 C -0.9 -0.4 -0.6 -0.8 0 -0.8', color);
+      // Ears: Semicircles
+      addPath(g, 'M -0.6 -0.65 C -0.9 -0.9 -0.4 -1.1 -0.35 -0.7', color);
+      addPath(g, 'M 0.6 -0.65 C 0.9 -0.9 0.4 -1.1 0.35 -0.7', color);
+      // Face: Dots and nose line
+      addCircle(g, -0.3, -0.1, 0.02, color); // Eye
+      addCircle(g, 0.3, -0.1, 0.02, color); // Eye
+      addCircle(g, 0, 0.2, 0.03, color); // Nose
+      addPath(g, 'M 0 0.23 L 0 0.5', color);
+      addPath(g, 'M -0.2 0.5 Q 0 0.6 0.2 0.5', color);
       return g;
     }
 
     if(type==='butterfly'){
-      // [Butterfly: Faithful to Sketch]
-      // Wings: Hand-drawn "B" shapes, not symmetrical
-      addPath(g, 'M -0.1 -0.3 Q -0.9 -0.8 -1.0 -0.2 Q -1.1 0.2 -0.1 0.2 Q -1.0 0.5 -0.8 1.0 Q -0.1 1.0 -0.1 0.4', color);
-      addPath(g, 'M 0.1 -0.3 Q 0.9 -0.8 1.0 -0.2 Q 1.1 0.2 0.1 0.2 Q 1.0 0.5 0.8 1.0 Q 0.1 1.0 0.1 0.4', color);
-      // Body: Long oval with face
-      addPath(g, 'M 0 -0.5 L 0 0.5', color); // Simplified line body like sketch
-      addPath(g, 'M 0 -0.6 C 0.2 -0.6 0.2 -0.3 0 -0.3 C -0.2 -0.3 -0.2 -0.6 0 -0.6', color); // Head
-      addPath(g, 'M -0.05 -0.5 L -0.05 -0.5', color); // eye
-      addPath(g, 'M 0.05 -0.5 L 0.05 -0.5', color); // eye
+      // Body: Long thin oval
+      addPath(g, 'M 0 -0.6 C -0.1 -0.6 -0.1 0.6 0 0.6 C 0.1 0.6 0.1 -0.6 0 -0.6', color);
+      // Head
+      addCircle(g, 0, -0.7, 0.12, color);
+      // Wings: B shaped
+      addPath(g, 'M -0.1 -0.4 C -1.0 -0.8 -1.2 0.4 -0.1 0.2 C -1.0 0.5 -0.6 1.0 -0.1 0.5', color);
+      addPath(g, 'M 0.1 -0.4 C 1.0 -0.8 1.2 0.4 0.1 0.2 C 1.0 0.5 0.6 1.0 0.1 0.5', color);
+      // Face details
+      addCircle(g, -0.04, -0.72, 0.015, color);
+      addCircle(g, 0.04, -0.72, 0.015, color);
+      addPath(g, 'M -0.04 -0.68 Q 0 -0.65 0.04 -0.68', color);
       // Antennae
-      addPath(g, 'M -0.05 -0.6 L -0.2 -0.8', color);
-      addPath(g, 'M 0.05 -0.6 L 0.2 -0.8', color);
+      addPath(g, 'M -0.05 -0.8 L -0.15 -1.0', color);
+      addPath(g, 'M 0.05 -0.8 L 0.15 -1.0', color);
       return g;
     }
 
     if(type==='bee'){
-      // [Bee: Faithful to Sketch]
-      // Head and Body distinct
-      addPath(g, 'M -0.8 0.1 C -0.9 -0.3 -0.5 -0.5 -0.4 -0.2 C -0.3 0.1 -0.6 0.4 -0.8 0.1', color); // Head
-      addPath(g, 'M -0.4 -0.1 Q 0.2 -0.5 0.6 -0.1 Q 0.2 0.5 -0.4 0.1', color); // Body
+      // Head (Circle) + Body (Oval with stripes)
+      addCircle(g, -0.5, 0, 0.3, color); // Head
+      addPath(g, 'M -0.3 0.1 C -0.3 -0.4 0.5 -0.4 0.6 0.1 C 0.6 0.5 -0.1 0.5 -0.3 0.1', color); // Body
       // Stripes
-      addPath(g, 'M -0.1 -0.2 L -0.1 0.3', color);
-      addPath(g, 'M 0.15 -0.25 L 0.15 0.3', color);
-      addPath(g, 'M 0.4 -0.2 L 0.4 0.25', color);
-      // Wings: Upright loops
-      addPath(g, 'M -0.3 -0.2 C -0.5 -0.9 0 -0.9 -0.1 -0.2', color);
-      addPath(g, 'M -0.1 -0.2 C 0.1 -0.9 0.5 -0.9 0.3 -0.2', color);
+      addPath(g, 'M -0.1 -0.15 L -0.1 0.35', color);
+      addPath(g, 'M 0.15 -0.15 L 0.15 0.35', color);
+      addPath(g, 'M 0.4 -0.1 L 0.4 0.25', color);
       // Stinger
-      addPath(g, 'M 0.6 0 L 0.8 0', color);
+      addPath(g, 'M 0.6 0.1 L 0.8 0.1', color);
+      // Wings: Upright
+      addPath(g, 'M -0.15 -0.15 C -0.2 -0.8 0.1 -0.9 0.2 -0.15', color);
+      addPath(g, 'M 0.2 -0.15 C 0.3 -0.7 0.5 -0.7 0.45 -0.15', color);
       // Face
-      addPath(g, 'M -0.7 -0.1 L -0.7 -0.1', color);
-      addPath(g, 'M -0.75 0.1 Q -0.65 0.2 -0.55 0.1', color);
+      addCircle(g, -0.6, -0.05, 0.02, color);
+      addPath(g, 'M -0.65 0.1 Q -0.55 0.2 -0.45 0.1', color);
       // Legs
-      addPath(g, 'M -0.2 0.3 L -0.25 0.6', color);
-      addPath(g, 'M 0.0 0.35 L 0.0 0.65', color);
+      addPath(g, 'M -0.1 0.35 L -0.15 0.6', color);
+      addPath(g, 'M 0.1 0.35 L 0.1 0.6', color);
       return g;
     }
 
     if(type==='frog'){
-       // [Frog: Faithful to Sketch]
-       // Outline: Bumps are distinct and "poko"
-       addPath(g, 'M -0.9 0.1 C -1.0 -0.5 -0.6 -0.5 -0.5 -0.5 C -0.5 -0.9 0.0 -0.9 0.0 -0.5 C 0.0 -0.5 0.0 -0.5 0.0 -0.5 C 0.0 -0.9 0.5 -0.9 0.5 -0.5 C 0.6 -0.5 1.0 -0.5 0.9 0.1 C 0.8 0.7 0.5 0.9 0 0.9 C -0.5 0.9 -0.8 0.7 -0.9 0.1', color);
-       // Eyes: Inside the bumps
-       addPath(g, 'M -0.25 -0.6 L -0.25 -0.6', color); // black dot
-       addPath(g, 'M -0.25 -0.6 A 0.1 0.1 0 1 1 -0.24 -0.6', color); // circle around? No, just dot in sketch
-       addPath(g, 'M 0.25 -0.6 L 0.25 -0.6', color); // black dot
-       // Mouth: Simple smiley
+       // Outline: Wide oval base, large eye bumps on top contour
+       addPath(g, 'M -0.9 0.1 C -0.9 -0.6 -0.7 -0.6 -0.5 -0.6 C -0.5 -1.0 0.0 -1.0 0.0 -0.6 C 0.0 -0.6 0.0 -0.6 0.0 -0.6 C 0.0 -1.0 0.5 -1.0 0.5 -0.6 C 0.7 -0.6 0.9 -0.6 0.9 0.1 C 0.9 0.7 0.5 0.9 0 0.9 C -0.5 0.9 -0.9 0.7 -0.9 0.1', color);
+       // Eyes: Circles inside the bumps
+       addCircle(g, -0.25, -0.6, 0.06, color);
+       addCircle(g, 0.25, -0.6, 0.06, color);
+       // Mouth: Wide smile
        addPath(g, 'M -0.4 0.2 Q 0 0.5 0.4 0.2', color);
        return g;
     }
@@ -718,7 +723,7 @@ const APP_VERSION = "3.5.10";
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.10"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.11"); }
 </script>
 </body>
 </html>
