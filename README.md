@@ -19,8 +19,6 @@
 
 ## スクリーンショット
 
-> リポジトリ直下に `screenshot1.png` / `screenshot2.png` / `screenshot3.png` を置く想定です（このREADMEと同じ階層）。
-
 | ☆ きらきら星 | 🐻 森のくまさん | 🐝 ぶんぶんぶん |
 |---|---|---|
 | ![☆ きらきら星](./screenshot1.png) | ![🐻 森のくまさん](./screenshot2.png) | ![🐝 ぶんぶんぶん](./screenshot3.png) |
