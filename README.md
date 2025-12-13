@@ -1,5 +1,9 @@
 # VISUALIZED-THEREMIN-2
 
+## 実行ページ（GitHub Pages）
+
+▶ https://masato-nasu.github.io/VISUALIZED-THEREMIN-2/index.html
+
 タッチ位置で音程が変わり、同時にネオン風の線画（動物/記号）が呼吸するように拡縮する、**Baby向けミニマル・テルミン**です。  
 
 ---
