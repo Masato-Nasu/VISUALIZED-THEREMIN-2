@@ -1,4 +1,4 @@
-// sw.js v3.5.39 (minimal: no caching to avoid white-screen loops)
+// sw.js v3.5.40 (minimal: no caching to avoid white-screen loops)
 self.addEventListener('install', (event) => {
   event.waitUntil(self.skipWaiting());
 });
