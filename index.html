@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Baby Theremin – Songs & Shapes</title>
-<link rel="manifest" href="./manifest.json?v=3.4.4">
+<link rel="manifest" href="./manifest.json?v=3.4.7">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -64,6 +64,41 @@
   }
   #emojiFallback.show{ opacity:1; }
 </style>
+
+<script>
+/* === Hard update guard (v3.4.7) ===
+   When version changes, purge old SW + caches once, then reload.
+   This prevents "更新されない" caused by stubborn Service Worker caches.
+*/
+const APP_VERSION = "3.4.7";
+(async () => {
+  try {
+    const last = localStorage.getItem("babyThereminVersion");
+    if (last !== APP_VERSION) {
+      localStorage.setItem("babyThereminVersion", APP_VERSION);
+
+      // Unregister any existing service workers under this scope
+      if (navigator.serviceWorker) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+
+      // Delete caches used by older versions
+      if (window.caches && caches.keys) {
+        const keys = await caches.keys();
+        await Promise.all(keys.filter(k => k.startsWith("baby-theremin-pd")).map(k => caches.delete(k)));
+      }
+
+      // One-time forced reload (bypass caches)
+      location.replace("./index.html?v=" + APP_VERSION + "&hard=1");
+      return;
+    }
+  } catch (e) {
+    // ignore
+  }
+})();
+</script>
+
 </head>
 <body>
 <div id="bg"></div>
@@ -75,7 +110,7 @@
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.4.6</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>左下アイコン：曲切替　v3.4.7</div>
   </div>
 </div>
 
@@ -710,7 +745,7 @@
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.4.6"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.4.7"); }
 </script>
 </body>
 </html>
