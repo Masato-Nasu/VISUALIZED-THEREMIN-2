@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-<title>Baby Theremin – Instant Start</title>
-<link rel="manifest" href="./manifest.json?v=3.5.17">
+<title>Baby Theremin – Fix Visibility</title>
+<link rel="manifest" href="./manifest.json?v=3.5.18">
 <meta name="theme-color" content="#ffffff">
 <style>
   :root{ --bg:#fafbfe; --text:#10121a; --panel:#ffffffcc; --shadow:rgba(0,0,0,.12); }
@@ -54,8 +54,8 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.17) === */
-const APP_VERSION = "3.5.17";
+/* === Hard update guard (v3.5.18) === */
+const APP_VERSION = "3.5.18";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -404,14 +404,26 @@ const APP_VERSION = "3.5.17";
     g.appendChild(a); g.appendChild(b); g.appendChild(c);
   }
   
+  // Use simple circles for dots (SAZAE-SAN eyes)
   function addDot(g, cx, cy, color){
-    const p = el('path');
-    p.setAttribute('d', `M ${cx} ${cy} L ${cx} ${cy}`);
-    const [a,b,c] = neonStroke(p, color, LINE_BASE*2.4, LINE_BASE*1.5, Math.max(1, LINE_BASE*0.65));
-    a.setAttribute('stroke-width', String(LINE_BASE*3.5));
-    b.setAttribute('stroke-width', String(LINE_BASE*2.5));
-    c.setAttribute('stroke-width', String(LINE_BASE*1.2));
-    g.appendChild(a); g.appendChild(b); g.appendChild(c);
+    const p = el('circle');
+    p.setAttribute('cx', String(cx));
+    p.setAttribute('cy', String(cy));
+    p.setAttribute('r', String(0.05)); // Fixed small radius
+    p.setAttribute('fill', color); // Filled dot
+    p.setAttribute('stroke', 'none');
+    
+    // Add glow to filled dot
+    const glow = p.cloneNode(false);
+    glow.setAttribute('fill', 'none');
+    glow.setAttribute('stroke', color);
+    glow.setAttribute('stroke-width', String(LINE_BASE*1.5));
+    glow.setAttribute('opacity', '0.4');
+    glow.setAttribute('vector-effect','non-scaling-stroke');
+    glow.setAttribute('filter', 'url(#glow)');
+    
+    g.appendChild(glow);
+    g.appendChild(p);
   }
 
   // === ONE STROKE / SILHOUETTE STYLE ===
@@ -467,10 +479,12 @@ const APP_VERSION = "3.5.17";
     }
 
     if(type==='frog'){
-       // Distinct Frog Silhouette: Bump on head for eyes (Mickey Mouse hat style)
-       addPath(g, 'M -0.8 0 C -0.8 -0.5 -0.6 -0.8 -0.3 -0.8 C -0.2 -0.8 -0.1 -0.7 0 -0.6 C 0.1 -0.7 0.2 -0.8 0.3 -0.8 C 0.6 -0.8 0.8 -0.5 0.8 0 C 0.8 0.6 0.5 0.9 0 0.9 C -0.5 0.9 -0.8 0.6 -0.8 0', color);
+       // [修正] シンプルな楕円の輪郭 ＋ 上部にちょこんと点目
+       addPath(g, 'M -0.9 0.1 C -0.9 -0.6 -0.5 -0.8 0 -0.8 C 0.5 -0.8 0.9 -0.6 0.9 0.1 C 0.9 0.6 0.5 0.9 0 0.9 C -0.5 0.9 -0.9 0.6 -0.9 0.1', color);
+       // 点目 (Dot eyes)
        addDot(g, -0.4, -0.4, color);
        addDot(g, 0.4, -0.4, color);
+       // 口 (Mouth)
        addPath(g, 'M -0.3 0.3 Q 0 0.5 0.3 0.3', color);
        return g;
     }
@@ -481,9 +495,6 @@ const APP_VERSION = "3.5.17";
   }
   // ==================================================
 
-  // ... (Rest of the script remains unchanged)
-  // ...
-  
   function clearStageButDefs(){
     const kids = Array.from(stage.childNodes);
     for(const k of kids){
@@ -676,7 +687,7 @@ const APP_VERSION = "3.5.17";
 })();
 </script>
 <script>
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.17"); }
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js?v=3.5.18"); }
 </script>
 </body>
 </html>
