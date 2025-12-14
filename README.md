@@ -65,7 +65,6 @@
 - `manifest.json` : PWA設定
 - `sw.js` : Service Worker（PWAのインストール要件・安定化用）
 - `icon-192.png`, `icon-512.png` : PWAアイコン
-- `Chime.mp3` : （入っている場合）効果音・素材
 
 ---
 
