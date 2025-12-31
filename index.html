@@ -66,7 +66,7 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.45) === */
+/* === Hard update guard (v3.5.46) === */
 const APP_VERSION = "3.5.43";
 (async () => {
   try {
@@ -100,7 +100,7 @@ const APP_VERSION = "3.5.43";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.45</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.46</div>
   </div>
 </div>
 
@@ -598,13 +598,6 @@ const APP_VERSION = "3.5.43";
     const pO = el('path'); pO.setAttribute('d', dOuter);
     const [og1,og2,og3] = neonStroke(pO, color, LINE_BASE*2.8, LINE_BASE*1.8, Math.max(1, LINE_BASE*0.80));
     g.appendChild(og1); g.appendChild(og2); g.appendChild(og3);
-
-    // Details: inner ring (no radial veins)
-    const r2 = r*0.72;
-    const dD = `M ${cx+r2} ${cy} A ${r2} ${r2} 0 1 1 ${cx-r2} ${cy} A ${r2} ${r2} 0 1 1 ${cx+r2} ${cy} `;
-    const pD = el('path'); pD.setAttribute('d', dD);
-    const [dg1,dg2,dg3] = neonStroke(pD, color, LINE_BASE*2.0, LINE_BASE*1.2, Math.max(1, LINE_BASE*0.55));
-    g.appendChild(dg1); g.appendChild(dg2); g.appendChild(dg3);
   }
 
 
@@ -921,7 +914,7 @@ const APP_VERSION = "3.5.43";
   }
   try{ window.__startApp = startApp; }catch(_e){}
 
-  // v3.5.45 patch: start on first touch anywhere (no button required)
+  // v3.5.46 patch: start on first touch anywhere (no button required)
   const __startOnGesture = (e)=>{ try{ if(!started){ suppressTapSfx=true; startApp(); } else { resumeAudio(); } }catch(_err){} };
   window.addEventListener('pointerdown', __startOnGesture, {once:true, passive:true, capture:true});
   window.addEventListener('touchstart', __startOnGesture, {once:true, passive:true, capture:true});
@@ -946,9 +939,9 @@ const APP_VERSION = "3.5.43";
 if("serviceWorker" in navigator){  }
 </script>
 
-<!-- patch v3.5.45: hide starter, robust start, error overlay -->
+<!-- patch v3.5.46: hide starter, robust start, error overlay -->
 <div id="verTag" style="position:fixed;right:10px;bottom:10px;font:12px/1 system-ui;color:#00000055;z-index:9999;user-select:none;pointer-events:none;">
-  v3.5.45
+  v3.5.46
 </div>
 <script>
 (() => {
@@ -964,7 +957,7 @@ if("serviceWorker" in navigator){  }
 
   function showErr(msg) {
     panel.style.display = 'block';
-    panel.textContent = '⚠ エラー表示 (v3.5.45)\n' + msg;
+    panel.textContent = '⚠ エラー表示 (v3.5.46)\n' + msg;
   }
 
   window.addEventListener('error', (e) => {
