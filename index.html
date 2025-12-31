@@ -66,8 +66,8 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.42) === */
-const APP_VERSION = "3.5.42";
+/* === Hard update guard (v3.5.43) === */
+const APP_VERSION = "3.5.43";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -100,7 +100,7 @@ const APP_VERSION = "3.5.42";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.42</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.43</div>
   </div>
 </div>
 
@@ -550,6 +550,59 @@ const APP_VERSION = "3.5.42";
   }
 
 
+  function addGrassTuft(g, cx=0.10, y=0.98, s=0.20, color='#22c55e'){
+    // Tiny neon line-art grass tuft for sheep: ~20% presence, low node count.
+    // Uses thinner stroke weights than full grass so it doesn't feel "too bold" at small scale.
+    const w = 0.40*s;
+    const h1 = 0.55*s, h2 = 0.80*s, h3 = 0.65*s;
+
+    let dMain = '';
+    dMain += `M ${cx-w} ${y} C ${cx-w*1.05} ${y-h1*0.45} ${cx-w*0.55} ${y-h1*0.95} ${cx-w*0.15} ${y-h1} `;
+    dMain += `M ${cx} ${y} C ${cx-0.06*s} ${y-h2*0.45} ${cx+0.02*s} ${y-h2*0.90} ${cx+0.05*s} ${y-h2} `;
+    dMain += `M ${cx+w} ${y} C ${cx+w*0.55} ${y-h3*0.40} ${cx+w*0.80} ${y-h3*0.92} ${cx+w*0.20} ${y-h3} `;
+
+    let dThin = '';
+    dThin += `M ${cx-w*0.65} ${y} C ${cx-w*0.75} ${y-h1*0.40} ${cx-w*0.35} ${y-h1*0.88} ${cx-w*0.05} ${y-h1*0.98} `;
+    dThin += `M ${cx+0.04*s} ${y} C ${cx+0.00*s} ${y-h2*0.38} ${cx+0.06*s} ${y-h2*0.86} ${cx+0.09*s} ${y-h2*0.95} `;
+    dThin += `M ${cx+w*0.75} ${y} C ${cx+w*0.55} ${y-h3*0.35} ${cx+w*0.70} ${y-h3*0.80} ${cx+w*0.30} ${y-h3*0.95} `;
+
+    const p1 = el('path'); p1.setAttribute('d', dMain);
+    const [a1,b1,c1] = neonStroke(p1, color, LINE_BASE*2.2, LINE_BASE*1.3, Math.max(1, LINE_BASE*0.60));
+    g.appendChild(a1); g.appendChild(b1); g.appendChild(c1);
+
+    const p2 = el('path'); p2.setAttribute('d', dThin);
+    const [a2,b2,c2] = neonStroke(p2, color, LINE_BASE*1.6, LINE_BASE*1.0, Math.max(1, LINE_BASE*0.45));
+    g.appendChild(a2); g.appendChild(b2); g.appendChild(c2);
+  }
+
+  function addLilyPad(g, cx=0.06, cy=0.86, r=0.62, color='#22c55e'){
+    // Round floating lily pad (浮草) — neon line-art, low node count.
+    // Outer: "pac-man" wedge cut to center
+    const start = -0.15 * Math.PI; // ~ -27deg
+    const end   =  1.70 * Math.PI; // ~ 306deg (leave a wedge)
+    const x1 = cx + r*Math.cos(start), y1 = cy + r*Math.sin(start);
+    const x2 = cx + r*Math.cos(end),   y2 = cy + r*Math.sin(end);
+
+    const dOuter = `M ${x1} ${y1} A ${r} ${r} 0 1 1 ${x2} ${y2} L ${cx} ${cy} Z`;
+    const pO = el('path'); pO.setAttribute('d', dOuter);
+    const [og1,og2,og3] = neonStroke(pO, color, LINE_BASE*2.8, LINE_BASE*1.8, Math.max(1, LINE_BASE*0.80));
+    g.appendChild(og1); g.appendChild(og2); g.appendChild(og3);
+
+    // Details: inner ring + veins (single path for performance)
+    const r2 = r*0.72;
+    let dD = `M ${cx+r2} ${cy} A ${r2} ${r2} 0 1 1 ${cx-r2} ${cy} A ${r2} ${r2} 0 1 1 ${cx+r2} ${cy} `;
+    const angles = [-2.35,-1.95,-1.55,-1.15,-0.75,-0.35,0.35,0.75,1.15,1.55,1.95,2.35]; // avoid the wedge area
+    for(const a of angles){
+      const xA = cx + r2*0.15*Math.cos(a), yA = cy + r2*0.15*Math.sin(a);
+      const xB = cx + r2*0.92*Math.cos(a), yB = cy + r2*0.92*Math.sin(a);
+      dD += ` M ${xA} ${yA} L ${xB} ${yB} `;
+    }
+    const pD = el('path'); pD.setAttribute('d', dD);
+    const [dg1,dg2,dg3] = neonStroke(pD, color, LINE_BASE*2.0, LINE_BASE*1.2, Math.max(1, LINE_BASE*0.55));
+    g.appendChild(dg1); g.appendChild(dg2); g.appendChild(dg3);
+  }
+
+
   function addFlower(g, x=0.75, y=0.90, s=1.0, petal='#ef4444', center='#facc15', stem='#22c55e'){
     const rP = 0.10*s, rC = 0.07*s;
     const off = 0.16*s, diag = 0.11*s;
@@ -596,8 +649,7 @@ const APP_VERSION = "3.5.42";
       addPath(g, 'M -0.15 0.55 L -0.15 0.85', color);
       addPath(g, 'M 0.3 0.55 L 0.3 0.85', color);
       addPath(g, 'M 0.55 0.5 L 0.6 0.8', color);
-      addGrass(g, 0.98, '#22c55e');
-      return g;
+      addGrassTuft(g, 0.10, 0.98, 0.20, '#22c55e');return g;
     }
 
     if(type==='bear'){
@@ -659,7 +711,8 @@ const APP_VERSION = "3.5.42";
     }
 
     if(type==='frog'){
-       // [再修正] もっと丸っこく、目は点
+             addLilyPad(g, 0.06, 0.86, 0.62, '#22c55e');
+// [再修正] もっと丸っこく、目は点
        // 輪郭: 全体的に丸いフォルムに変更。目の突起はなだらかに。
        addPath(g, 'M -0.8 0.1 C -0.8 -0.4 -0.6 -0.6 -0.4 -0.6 C -0.4 -0.8 -0.1 -0.8 -0.1 -0.6 L 0.1 -0.6 C 0.1 -0.8 0.4 -0.8 0.4 -0.6 C 0.6 -0.6 0.8 -0.4 0.8 0.1 C 0.8 0.6 0.5 0.9 0 0.9 C -0.5 0.9 -0.8 0.6 -0.8 0.1', color);
        // 目: シンプルな点（小さな塗りつぶし円）
@@ -667,7 +720,7 @@ const APP_VERSION = "3.5.42";
        addCircle(g, 0.25, -0.6, 0.03, color);
        // 口: 位置を調整
        addPath(g, 'M -0.3 0.3 Q 0 0.5 0.3 0.3', color);
-      addGrass(g, 0.98, '#22c55e');
+      /* grass replaced by lily pad */
        return g;
     }
 
@@ -859,7 +912,7 @@ const APP_VERSION = "3.5.42";
   }
   try{ window.__startApp = startApp; }catch(_e){}
 
-  // v3.5.42 patch: start on first touch anywhere (no button required)
+  // v3.5.43 patch: start on first touch anywhere (no button required)
   const __startOnGesture = (e)=>{ try{ if(!started){ suppressTapSfx=true; startApp(); } else { resumeAudio(); } }catch(_err){} };
   window.addEventListener('pointerdown', __startOnGesture, {once:true, passive:true, capture:true});
   window.addEventListener('touchstart', __startOnGesture, {once:true, passive:true, capture:true});
@@ -884,9 +937,9 @@ const APP_VERSION = "3.5.42";
 if("serviceWorker" in navigator){  }
 </script>
 
-<!-- patch v3.5.42: hide starter, robust start, error overlay -->
+<!-- patch v3.5.43: hide starter, robust start, error overlay -->
 <div id="verTag" style="position:fixed;right:10px;bottom:10px;font:12px/1 system-ui;color:#00000055;z-index:9999;user-select:none;pointer-events:none;">
-  v3.5.42
+  v3.5.43
 </div>
 <script>
 (() => {
@@ -902,7 +955,7 @@ if("serviceWorker" in navigator){  }
 
   function showErr(msg) {
     panel.style.display = 'block';
-    panel.textContent = '⚠ エラー表示 (v3.5.42)\n' + msg;
+    panel.textContent = '⚠ エラー表示 (v3.5.43)\n' + msg;
   }
 
   window.addEventListener('error', (e) => {
