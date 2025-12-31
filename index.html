@@ -501,75 +501,51 @@ const APP_VERSION = "3.5.42";
   }
 
   function addGrass(g, y=0.98, color='#22c55e'){
-    // Neon line-art grass (線画ネオン)
-    // Coordinate space: local -1..1-ish sketch space inside each sprite.
-    const addNeon = (d, col=color, boost=1.0)=>{
-      const p = el('path');
-      p.setAttribute('d', d);
-      const [a,b,c] = neonStroke(
-        p,
-        col,
-        LINE_BASE*2.9*boost,
-        LINE_BASE*1.8*boost,
-        Math.max(1, LINE_BASE*0.75*boost)
-      );
-      g.appendChild(a); g.appendChild(b); g.appendChild(c);
-    };
-
-    // Ground arc (subtle but visible)
-    addNeon(
-      `M -1 ${y} Q -0.75 ${y-0.12} -0.5 ${y} Q -0.25 ${y-0.12} 0 ${y} Q 0.25 ${y-0.12} 0.5 ${y} Q 0.75 ${y-0.12} 1 ${y}`,
-      color,
-      0.85
-    );
-
-    // Main blades: x, height, lean, color
+    // Neon line-art grass (線画ネオン) — optimized: very few SVG nodes for snappy touch response.
+    // Build 2 combined paths and apply neonStroke only twice (instead of per-blade).
     const blades = [
-      [-0.86, 0.55, -0.18, '#84cc16'],
-      [-0.63, 0.40, -0.08, '#a3e635'],
-      [-0.36, 0.48,  0.03, '#22c55e'],
-      [-0.10, 0.64,  0.10, '#86efac'],
-      [ 0.18, 0.58,  0.14, '#22c55e'],
-      [ 0.45, 0.44,  0.08, '#a3e635'],
-      [ 0.74, 0.52,  0.18, '#84cc16'],
+      {x:-0.92, h:0.62, lean:-0.06},
+      {x:-0.64, h:0.80, lean: 0.04},
+      {x:-0.34, h:0.70, lean:-0.02},
+      {x: 0.00, h:0.92, lean: 0.05},
+      {x: 0.32, h:0.72, lean:-0.03},
+      {x: 0.62, h:0.84, lean: 0.02},
+      {x: 0.92, h:0.60, lean:-0.04},
     ];
 
-    for(const [x,h,lean,col] of blades){
+    let dMain = '';
+    let dThin = '';
+
+    // Ground arc (helps readability without adding many blades)
+    dThin += `M -1.03 ${y} Q 0 ${y+0.05} 1.03 ${y} `;
+
+    for(const b of blades){
+      const x = b.x;
+      const h = b.h;
+      const lean = b.lean;
       const tipX = x + lean;
       const tipY = y - h;
 
-      // Primary blade (thicker)
-      addNeon(
-        `M ${x} ${y} C ${x-0.10} ${y-h*0.45} ${x-0.03} ${y-h*0.86} ${tipX} ${tipY}`,
-        col,
-        1.00
-      );
+      // Main blade
+      dMain += `M ${x} ${y} C ${x-0.10} ${y-h*0.45} ${x-0.03} ${y-h*0.86} ${tipX} ${tipY} `;
 
-      // Secondary stroke to mimic layered blades
-      addNeon(
-        `M ${x+0.06} ${y} C ${x+0.02} ${y-h*0.40} ${x+0.06} ${y-h*0.83} ${tipX+0.03} ${tipY+0.02}`,
-        col,
-        0.82
-      );
+      // Layered secondary stroke (thin)
+      dThin += `M ${x+0.06} ${y} C ${x+0.02} ${y-h*0.40} ${x+0.06} ${y-h*0.83} ${tipX+0.03} ${tipY+0.02} `;
 
-      // Slim highlight stroke (keeps neon feel)
-      addNeon(
-        `M ${x-0.05} ${y} C ${x-0.07} ${y-h*0.32} ${x-0.02} ${y-h*0.68} ${tipX-0.02} ${tipY+0.08}`,
-        col,
-        0.55
-      );
+      // Small side sprout (thin)
+      dThin += `M ${x-0.05} ${y} Q ${x-0.02} ${y-0.10} ${x+0.03} ${y-0.24} `;
     }
 
-    // Extra small sprouts for readability at small sizes
-    const sprouts = [-0.95, -0.76, -0.55, -0.22, 0.02, 0.26, 0.54, 0.92];
-    for(const sx of sprouts){
-      addNeon(
-        `M ${sx} ${y} Q ${sx+0.03} ${y-0.12} ${sx+0.08} ${y-0.28}`,
-        color,
-        0.55
-      );
-    }
+    // Apply neon strokes (2 paths total)
+    const p1 = el('path'); p1.setAttribute('d', dMain);
+    const [a1,b1,c1] = neonStroke(p1, color, LINE_BASE*3.1, LINE_BASE*2.0, Math.max(1, LINE_BASE*0.95));
+    g.appendChild(a1); g.appendChild(b1); g.appendChild(c1);
+
+    const p2 = el('path'); p2.setAttribute('d', dThin);
+    const [a2,b2,c2] = neonStroke(p2, color, LINE_BASE*2.2, LINE_BASE*1.4, Math.max(1, LINE_BASE*0.70));
+    g.appendChild(a2); g.appendChild(b2); g.appendChild(c2);
   }
+
 
   function addFlower(g, x=0.75, y=0.90, s=1.0, petal='#ef4444', center='#facc15', stem='#22c55e'){
     const rP = 0.10*s, rC = 0.07*s;
@@ -591,6 +567,9 @@ const APP_VERSION = "3.5.42";
   // === TRACING HAND-DRAWN SKETCH (Strict) ===
   function makeCuteAnimal(type, color){
     const g = el('g');
+    // Improve touch responsiveness: ignore pointer hit-testing on heavy SVG paths
+    g.setAttribute('pointer-events','none');
+    g.style.pointerEvents = 'none';
 
     if(type==='star'){
       // Rounded chubby star (keep)
