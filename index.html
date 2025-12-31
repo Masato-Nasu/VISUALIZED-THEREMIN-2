@@ -66,7 +66,7 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.43) === */
+/* === Hard update guard (v3.5.45) === */
 const APP_VERSION = "3.5.43";
 (async () => {
   try {
@@ -100,7 +100,7 @@ const APP_VERSION = "3.5.43";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.43</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.45</div>
   </div>
 </div>
 
@@ -551,20 +551,31 @@ const APP_VERSION = "3.5.43";
 
 
   function addGrassTuft(g, cx=0.10, y=0.98, s=0.20, color='#22c55e'){
-    // Tiny neon line-art grass tuft for sheep: ~20% presence, low node count.
-    // Uses thinner stroke weights than full grass so it doesn't feel "too bold" at small scale.
+    // Tiny neon line-art grass tuft for sheep: upward-fanning blades (上向きに広がる)
+    // Kept very low node count for snappy touch response.
     const w = 0.40*s;
     const h1 = 0.55*s, h2 = 0.80*s, h3 = 0.65*s;
 
+    // Bases stay closer to center; tips spread outward.
+    const baseF = 0.28;
+    const tipF  = 1.08;
+
+    const lx0 = cx - w*baseF, lx1 = cx - w*tipF;
+    const rx0 = cx + w*baseF, rx1 = cx + w*tipF;
+    const cx1 = cx + 0.03*s; // slight lean for the center blade
+
     let dMain = '';
-    dMain += `M ${cx-w} ${y} C ${cx-w*1.05} ${y-h1*0.45} ${cx-w*0.55} ${y-h1*0.95} ${cx-w*0.15} ${y-h1} `;
-    dMain += `M ${cx} ${y} C ${cx-0.06*s} ${y-h2*0.45} ${cx+0.02*s} ${y-h2*0.90} ${cx+0.05*s} ${y-h2} `;
-    dMain += `M ${cx+w} ${y} C ${cx+w*0.55} ${y-h3*0.40} ${cx+w*0.80} ${y-h3*0.92} ${cx+w*0.20} ${y-h3} `;
+    dMain += `M ${lx0} ${y} C ${lx0-0.04*s} ${y-h1*0.40} ${lx1-0.01*s} ${y-h1*0.88} ${lx1} ${y-h1} `;
+    dMain += `M ${cx}  ${y} C ${cx-0.05*s} ${y-h2*0.45} ${cx+0.02*s} ${y-h2*0.92} ${cx1} ${y-h2} `;
+    dMain += `M ${rx0} ${y} C ${rx0+0.04*s} ${y-h3*0.38} ${rx1+0.01*s} ${y-h3*0.90} ${rx1} ${y-h3} `;
 
     let dThin = '';
-    dThin += `M ${cx-w*0.65} ${y} C ${cx-w*0.75} ${y-h1*0.40} ${cx-w*0.35} ${y-h1*0.88} ${cx-w*0.05} ${y-h1*0.98} `;
-    dThin += `M ${cx+0.04*s} ${y} C ${cx+0.00*s} ${y-h2*0.38} ${cx+0.06*s} ${y-h2*0.86} ${cx+0.09*s} ${y-h2*0.95} `;
-    dThin += `M ${cx+w*0.75} ${y} C ${cx+w*0.55} ${y-h3*0.35} ${cx+w*0.70} ${y-h3*0.80} ${cx+w*0.30} ${y-h3*0.95} `;
+    // Thin accent strokes (also fanning)
+    const lxb = cx - w*0.10, lxt = cx - w*0.86;
+    const rxb = cx + w*0.10, rxt = cx + w*0.86;
+    dThin += `M ${lxb} ${y} C ${lxb-0.02*s} ${y-h1*0.34} ${lxt+0.03*s} ${y-h1*0.78} ${lxt} ${y-h1*0.96} `;
+    dThin += `M ${cx+0.01*s} ${y} C ${cx-0.01*s} ${y-h2*0.34} ${cx+0.08*s} ${y-h2*0.80} ${cx+0.12*s} ${y-h2*0.95} `;
+    dThin += `M ${rxb} ${y} C ${rxb+0.02*s} ${y-h3*0.30} ${rxt-0.03*s} ${y-h3*0.76} ${rxt} ${y-h3*0.95} `;
 
     const p1 = el('path'); p1.setAttribute('d', dMain);
     const [a1,b1,c1] = neonStroke(p1, color, LINE_BASE*2.2, LINE_BASE*1.3, Math.max(1, LINE_BASE*0.60));
@@ -588,15 +599,9 @@ const APP_VERSION = "3.5.43";
     const [og1,og2,og3] = neonStroke(pO, color, LINE_BASE*2.8, LINE_BASE*1.8, Math.max(1, LINE_BASE*0.80));
     g.appendChild(og1); g.appendChild(og2); g.appendChild(og3);
 
-    // Details: inner ring + veins (single path for performance)
+    // Details: inner ring (no radial veins)
     const r2 = r*0.72;
-    let dD = `M ${cx+r2} ${cy} A ${r2} ${r2} 0 1 1 ${cx-r2} ${cy} A ${r2} ${r2} 0 1 1 ${cx+r2} ${cy} `;
-    const angles = [-2.35,-1.95,-1.55,-1.15,-0.75,-0.35,0.35,0.75,1.15,1.55,1.95,2.35]; // avoid the wedge area
-    for(const a of angles){
-      const xA = cx + r2*0.15*Math.cos(a), yA = cy + r2*0.15*Math.sin(a);
-      const xB = cx + r2*0.92*Math.cos(a), yB = cy + r2*0.92*Math.sin(a);
-      dD += ` M ${xA} ${yA} L ${xB} ${yB} `;
-    }
+    const dD = `M ${cx+r2} ${cy} A ${r2} ${r2} 0 1 1 ${cx-r2} ${cy} A ${r2} ${r2} 0 1 1 ${cx+r2} ${cy} `;
     const pD = el('path'); pD.setAttribute('d', dD);
     const [dg1,dg2,dg3] = neonStroke(pD, color, LINE_BASE*2.0, LINE_BASE*1.2, Math.max(1, LINE_BASE*0.55));
     g.appendChild(dg1); g.appendChild(dg2); g.appendChild(dg3);
@@ -605,13 +610,12 @@ const APP_VERSION = "3.5.43";
 
   function addFlower(g, x=0.75, y=0.90, s=1.0, petal='#ef4444', center='#facc15', stem='#22c55e'){
     const rP = 0.10*s, rC = 0.07*s;
-    const off = 0.16*s, diag = 0.11*s;
-    // petals
-    addCircle(g, x, y-off, rP, petal);
-    addCircle(g, x+diag, y-diag, rP, petal);
-    addCircle(g, x+diag, y+diag, rP, petal);
-    addCircle(g, x-diag, y+diag, rP, petal);
-    addCircle(g, x-diag, y-diag, rP, petal);
+    const off = 0.16*s;
+    // petals (4枚の花弁)
+    addCircle(g, x,     y-off, rP, petal);
+    addCircle(g, x+off, y,     rP, petal);
+    addCircle(g, x,     y+off, rP, petal);
+    addCircle(g, x-off, y,     rP, petal);
     // center
     addCircle(g, x, y, rC, center);
     // stem + leaf (optional, but helps readability)
@@ -649,7 +653,12 @@ const APP_VERSION = "3.5.43";
       addPath(g, 'M -0.15 0.55 L -0.15 0.85', color);
       addPath(g, 'M 0.3 0.55 L 0.3 0.85', color);
       addPath(g, 'M 0.55 0.5 L 0.6 0.8', color);
-      addGrassTuft(g, 0.10, 0.98, 0.20, '#22c55e');return g;
+      
+      // Sheep grass: denser but still small (better visibility)
+      addGrassTuft(g, -0.18, 0.985, 0.18, '#22c55e');
+      addGrassTuft(g,  0.08, 0.98,  0.20, '#22c55e');
+      addGrassTuft(g,  0.32, 0.985, 0.18, '#22c55e');
+      return g;
     }
 
     if(type==='bear'){
@@ -711,7 +720,7 @@ const APP_VERSION = "3.5.43";
     }
 
     if(type==='frog'){
-             addLilyPad(g, 0.06, 0.86, 0.62, '#22c55e');
+             addLilyPad(g, 0.60, 0.90, 0.40, '#22c55e');
 // [再修正] もっと丸っこく、目は点
        // 輪郭: 全体的に丸いフォルムに変更。目の突起はなだらかに。
        addPath(g, 'M -0.8 0.1 C -0.8 -0.4 -0.6 -0.6 -0.4 -0.6 C -0.4 -0.8 -0.1 -0.8 -0.1 -0.6 L 0.1 -0.6 C 0.1 -0.8 0.4 -0.8 0.4 -0.6 C 0.6 -0.6 0.8 -0.4 0.8 0.1 C 0.8 0.6 0.5 0.9 0 0.9 C -0.5 0.9 -0.8 0.6 -0.8 0.1', color);
@@ -912,7 +921,7 @@ const APP_VERSION = "3.5.43";
   }
   try{ window.__startApp = startApp; }catch(_e){}
 
-  // v3.5.43 patch: start on first touch anywhere (no button required)
+  // v3.5.45 patch: start on first touch anywhere (no button required)
   const __startOnGesture = (e)=>{ try{ if(!started){ suppressTapSfx=true; startApp(); } else { resumeAudio(); } }catch(_err){} };
   window.addEventListener('pointerdown', __startOnGesture, {once:true, passive:true, capture:true});
   window.addEventListener('touchstart', __startOnGesture, {once:true, passive:true, capture:true});
@@ -937,9 +946,9 @@ const APP_VERSION = "3.5.43";
 if("serviceWorker" in navigator){  }
 </script>
 
-<!-- patch v3.5.43: hide starter, robust start, error overlay -->
+<!-- patch v3.5.45: hide starter, robust start, error overlay -->
 <div id="verTag" style="position:fixed;right:10px;bottom:10px;font:12px/1 system-ui;color:#00000055;z-index:9999;user-select:none;pointer-events:none;">
-  v3.5.43
+  v3.5.45
 </div>
 <script>
 (() => {
@@ -955,7 +964,7 @@ if("serviceWorker" in navigator){  }
 
   function showErr(msg) {
     panel.style.display = 'block';
-    panel.textContent = '⚠ エラー表示 (v3.5.43)\n' + msg;
+    panel.textContent = '⚠ エラー表示 (v3.5.45)\n' + msg;
   }
 
   window.addEventListener('error', (e) => {
