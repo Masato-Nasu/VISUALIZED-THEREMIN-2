@@ -66,8 +66,8 @@
 </style>
 
 <script>
-/* === Hard update guard (v3.5.41) === */
-const APP_VERSION = "3.5.41";
+/* === Hard update guard (v3.5.42) === */
+const APP_VERSION = "3.5.42";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -100,7 +100,7 @@ const APP_VERSION = "3.5.41";
     <div style="margin-top:12px;">
       <button id="startbtn" class="startbtn">はじめる ▶</button>
     </div>
-    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.41</div>
+    <div class="small">短タップ：はじける ／ 長押し：テルミン<br>カエルを丸く、目を点にしました v3.5.42</div>
   </div>
 </div>
 
@@ -501,14 +501,66 @@ const APP_VERSION = "3.5.41";
   }
 
   function addGrass(g, y=0.98, color='#22c55e'){
-    // Wavy ground + a few blades
-    addPath(g, `M -1 ${y} Q -0.75 ${y-0.10} -0.5 ${y} Q -0.25 ${y-0.10} 0 ${y} Q 0.25 ${y-0.10} 0.5 ${y} Q 0.75 ${y-0.10} 1 ${y}`, color);
-    addPath(g, `M -0.75 ${y} L -0.85 ${y-0.20}`, color);
-    addPath(g, `M -0.45 ${y} L -0.52 ${y-0.24}`, color);
-    addPath(g, `M -0.10 ${y} L -0.08 ${y-0.22}`, color);
-    addPath(g, `M 0.20 ${y} L 0.26 ${y-0.24}`, color);
-    addPath(g, `M 0.55 ${y} L 0.62 ${y-0.22}`, color);
-    addPath(g, `M 0.80 ${y} L 0.88 ${y-0.20}`, color);
+    // Filled grass patch (more visible at small sprite sizes)
+    // Coordinate space here is the animal's local -1..1-ish sketch space.
+    const mkPath = (d, fill, opacity=1, stroke=null, strokeW=null)=>{
+      const p = el('path');
+      p.setAttribute('d', d);
+      p.setAttribute('fill', fill);
+      p.setAttribute('opacity', String(opacity));
+      if(stroke){
+        p.setAttribute('stroke', stroke);
+        p.setAttribute('stroke-width', String(strokeW ?? Math.max(1, LINE_BASE*0.35)));
+        p.setAttribute('stroke-linecap','round');
+        p.setAttribute('stroke-linejoin','round');
+        // Keep outline readable regardless of sprite scaling
+        p.setAttribute('vector-effect','non-scaling-stroke');
+      }else{
+        p.setAttribute('stroke','none');
+      }
+      return p;
+    };
+
+    // Soft base shadow to separate from black background
+    g.appendChild(mkPath(
+      `M -1 ${y+0.04} Q -0.55 ${y-0.05} 0 ${y+0.03} Q 0.55 ${y-0.05} 1 ${y+0.04} L 1 1.30 L -1 1.30 Z`,
+      '#052e16', 0.28
+    ));
+
+    const blades = [
+      // x, w, h, fill, highlight, lean
+      [-0.85, 0.58, 0.55, '#84cc16', '#d9f99d', -0.14],
+      [-0.55, 0.42, 0.38, '#a3e635', '#ecfccb', -0.05],
+      [-0.22, 0.36, 0.46, '#65a30d', '#d9f99d',  0.02],
+      [ 0.05, 0.54, 0.62, '#86efac', '#bbf7d0',  0.10],
+      [ 0.30, 0.44, 0.52, '#22c55e', '#86efac',  0.08],
+      [ 0.55, 0.36, 0.40, '#a3e635', '#ecfccb',  0.04],
+      [ 0.82, 0.58, 0.48, '#84cc16', '#d9f99d',  0.14],
+    ];
+
+    for(const [x,w,h,fill,hl,lean] of blades){
+      const tipX = x + lean;
+      const tipY = y - h;
+
+      // Main blade (closed)
+      const d = `M ${x-w/2} ${y}
+                 C ${x-w*0.20} ${y-h*0.55} ${x-w*0.06} ${y-h*0.95} ${tipX} ${tipY}
+                 C ${x+w*0.06} ${y-h*0.95} ${x+w*0.22} ${y-h*0.50} ${x+w/2} ${y}
+                 Z`.replace(/\s+/g,' ');
+      g.appendChild(mkPath(d, fill, 0.92, '#0b1f10', Math.max(1, LINE_BASE*0.30)));
+
+      // Highlight stripe (narrower inner blade)
+      const dw = w*0.32;
+      const dh = h*0.92;
+      const d2 = `M ${x-dw/2} ${y}
+                  C ${x-dw*0.15} ${y-dh*0.55} ${x-dw*0.04} ${y-dh*0.96} ${tipX*0.98 + x*0.02} ${y-dh}
+                  C ${x+dw*0.04} ${y-dh*0.96} ${x+dw*0.18} ${y-dh*0.50} ${x+dw/2} ${y}
+                  Z`.replace(/\s+/g,' ');
+      g.appendChild(mkPath(d2, hl, 0.55));
+    }
+
+    // A thin neon ground line to match the rest of the sketch style
+    addPath(g, `M -1 ${y} Q -0.75 ${y-0.08} -0.5 ${y} Q -0.25 ${y-0.08} 0 ${y} Q 0.25 ${y-0.08} 0.5 ${y} Q 0.75 ${y-0.08} 1 ${y}`, color);
   }
 
   function addFlower(g, x=0.75, y=0.90, s=1.0, petal='#ef4444', center='#facc15', stem='#22c55e'){
@@ -817,7 +869,7 @@ const APP_VERSION = "3.5.41";
   }
   try{ window.__startApp = startApp; }catch(_e){}
 
-  // v3.5.41 patch: start on first touch anywhere (no button required)
+  // v3.5.42 patch: start on first touch anywhere (no button required)
   const __startOnGesture = (e)=>{ try{ if(!started){ suppressTapSfx=true; startApp(); } else { resumeAudio(); } }catch(_err){} };
   window.addEventListener('pointerdown', __startOnGesture, {once:true, passive:true, capture:true});
   window.addEventListener('touchstart', __startOnGesture, {once:true, passive:true, capture:true});
@@ -842,9 +894,9 @@ const APP_VERSION = "3.5.41";
 if("serviceWorker" in navigator){  }
 </script>
 
-<!-- patch v3.5.41: hide starter, robust start, error overlay -->
+<!-- patch v3.5.42: hide starter, robust start, error overlay -->
 <div id="verTag" style="position:fixed;right:10px;bottom:10px;font:12px/1 system-ui;color:#00000055;z-index:9999;user-select:none;pointer-events:none;">
-  v3.5.41
+  v3.5.42
 </div>
 <script>
 (() => {
@@ -860,7 +912,7 @@ if("serviceWorker" in navigator){  }
 
   function showErr(msg) {
     panel.style.display = 'block';
-    panel.textContent = '⚠ エラー表示 (v3.5.41)\n' + msg;
+    panel.textContent = '⚠ エラー表示 (v3.5.42)\n' + msg;
   }
 
   window.addEventListener('error', (e) => {
