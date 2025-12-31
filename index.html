@@ -521,10 +521,13 @@ const APP_VERSION = "3.5.42";
 
     for(const b of blades){
       const x = b.x;
-      const h = b.h;
+      const h = b.h * 0.65; // shorter blades
       const lean = b.lean;
       const tipX = x + lean;
       const tipY = y - h;
+
+      const spr1 = Math.max(0.08, h*0.16);
+      const spr2 = Math.max(0.18, h*0.35);
 
       // Main blade
       dMain += `M ${x} ${y} C ${x-0.10} ${y-h*0.45} ${x-0.03} ${y-h*0.86} ${tipX} ${tipY} `;
@@ -532,8 +535,8 @@ const APP_VERSION = "3.5.42";
       // Layered secondary stroke (thin)
       dThin += `M ${x+0.06} ${y} C ${x+0.02} ${y-h*0.40} ${x+0.06} ${y-h*0.83} ${tipX+0.03} ${tipY+0.02} `;
 
-      // Small side sprout (thin)
-      dThin += `M ${x-0.05} ${y} Q ${x-0.02} ${y-0.10} ${x+0.03} ${y-0.24} `;
+      // Small side sprout (thin) — scaled with blade height
+      dThin += `M ${x-0.05} ${y} Q ${x-0.02} ${y - spr1} ${x+0.03} ${y - spr2} `;
     }
 
     // Apply neon strokes (2 paths total)
