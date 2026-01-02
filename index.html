@@ -67,7 +67,7 @@
 
 <script>
 /* === Hard update guard (v3.5.46) === */
-const APP_VERSION = "3.5.43";
+const APP_VERSION = "3.5.46";
 (async () => {
   try {
     const last = localStorage.getItem("babyThereminVersion");
@@ -75,7 +75,8 @@ const APP_VERSION = "3.5.43";
       localStorage.setItem("babyThereminVersion", APP_VERSION);
       if (navigator.serviceWorker) {
         const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r => r.unregister()));
+        const APP_SCOPE = new URL(".", location.href).href;
+await Promise.all(regs.filter(r => r.scope && r.scope.startsWith(APP_SCOPE)).map(r => r.unregister()));
       }
       if (window.caches && caches.keys) {
         const keys = await caches.keys();
